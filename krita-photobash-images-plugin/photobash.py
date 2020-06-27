@@ -9,6 +9,8 @@ class PhotobashDocker(DockWidget):
     referencesSetting = "referencesDirectory"
     
     foundImages = []
+
+    currPage = 0
     
     filterTextEdit = None
     mainWidget = None
@@ -76,11 +78,34 @@ class PhotobashDocker(DockWidget):
         mainLayout.addLayout(topLayout)
         mainLayout.addLayout(imagesLayout)
 
+        bottomLayout = QHBoxLayout()
+        previousButton = QToolButton(self.mainWidget)
+        previousButton.setMaximumWidth(3000)
+        previousButton.clicked.connect(lambda: self.updateCurrPage(-1))
+        previousButton.setArrowType(Qt.ArrowType.LeftArrow)
+
+        nextButton = QToolButton(self.mainWidget)
+        nextButton.setMaximumWidth(3000)
+        nextButton.clicked.connect(lambda: self.updateCurrPage(1))
+        nextButton.setArrowType(Qt.ArrowType.RightArrow)
+
+        bottomLayout.addWidget(previousButton)
+        bottomLayout.addWidget(nextButton)
+
+        mainLayout.addLayout(bottomLayout)
+
         self.mainWidget.setLayout(mainLayout)
 
+    def updateCurrPage(self, increment):
+        if (self.currPage == 0 and increment == -1) or ((self.currPage + 1) * len(self.imagesButtons) > len(self.foundImages) and increment == 1) or len(self.foundImages) == 0:
+            return 
+
+        self.currPage += increment
+        self.updateImages()
 
     def updateFilters(self):
         self.foundImages = []
+        self.currPage = 0
 
         if self.directoryPath != "":
             it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
@@ -95,18 +120,20 @@ class PhotobashDocker(DockWidget):
         self.updateImages()
 
     def buttonClick(self, position):
-        if position < len(self.foundImages):
-            self.addPhoto(self.foundImages[position])
+        if position < len(self.foundImages) - len(self.imagesButtons) * self.currPage:
+            self.addPhoto(self.foundImages[position + len(self.imagesButtons) * self.currPage])
         
     def updateImages(self):
         maxWidth = self.imagesButtons[0].width()
         maxHeight = self.imagesButtons[0].height()
 
-        maxRange = min(len(self.foundImages), len(self.imagesButtons))
+        buttonsSize = len(self.imagesButtons)
+
+        maxRange = min(len(self.foundImages) + self.currPage * buttonsSize, buttonsSize)
         for i in range(0, len(self.imagesButtons)):
             if i < maxRange:
                 print(self.foundImages[i])
-                pixmap = QPixmap(self.foundImages[i])
+                pixmap = QPixmap(self.foundImages[i + buttonsSize * self.currPage])
                 icon = QIcon(pixmap)
 
                 self.imagesButtons[i].setIcon(icon)
