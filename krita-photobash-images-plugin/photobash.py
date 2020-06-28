@@ -225,6 +225,7 @@ class PhotobashDocker(DockWidget):
             Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
         
         self.changePathButton.setText("Change References Directory")
+        self.updateTextFilter()
     
     def addImageLayer(self, photoPath):
         # Get the document:
