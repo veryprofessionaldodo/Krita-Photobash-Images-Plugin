@@ -1,5 +1,6 @@
 # Krita Photobash Plugin
 
+Want to see this in action? Check out the [video](https://youtu.be/QX9jwhfpB_8)!
 A simple Krita Plugin that lists the images you have on a folder you specify, with the ability to filter by words in the path. 
 
 To use this all you need to do is first [install](https://docs.krita.org/en/user_manual/python_scripting/krita_python_plugin_howto.html) this plugin. A tl;dr of this is: 

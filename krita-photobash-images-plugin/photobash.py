@@ -37,6 +37,7 @@ class PhotobashDocker(DockWidget):
 
         self.setLayout()
 
+    
     def canvasChanged(self, canvas):
         pass
 
@@ -135,6 +136,8 @@ class PhotobashDocker(DockWidget):
 
         self.mainWidget.setLayout(mainLayout)
 
+        self.updateTextFilter()
+
     def changedFitCanvas(self, state):
         if state == Qt.Checked: 
             self.fitCanvasChecked = True
@@ -164,6 +167,7 @@ class PhotobashDocker(DockWidget):
             it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
 
             while(it.hasNext()): 
+                
                 stringsInText = self.filterTextEdit.text().lower().split(" ")
 
                 for word in stringsInText: 
@@ -187,15 +191,15 @@ class PhotobashDocker(DockWidget):
             self.addImageLayer(self.foundImages[position + len(self.imagesButtons) * self.currPage])
         
     def updateImages(self):
-        maxWidth = 10000000
-        maxHeight = 10000000
+        maxWidth = 0
+        maxHeight = 0
         
         buttonsSize = len(self.imagesButtons)
 
         for i in range(0, buttonsSize):
-            if maxWidth > self.imagesButtons[i].width():
+            if maxWidth < self.imagesButtons[i].width():
                 maxWidth = self.imagesButtons[i].width()
-            if maxHeight > self.imagesButtons[i].height():
+            if maxHeight < self.imagesButtons[i].height():
                 maxHeight = self.imagesButtons[i].height()
         
         maxRange = min(len(self.foundImages) - self.currPage * buttonsSize, buttonsSize)
@@ -262,6 +266,7 @@ class PhotobashDocker(DockWidget):
                 newHeight = activeNode.bounds().height() * self.currImageScale / 100 
 
                 activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
+            
             # Center image
             offsetX = doc.bounds().width()/2 - activeNode.bounds().center().x() 
             offsetY = doc.bounds().height()/2 - activeNode.bounds().center().y() 
