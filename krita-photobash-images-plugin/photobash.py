@@ -46,7 +46,7 @@ class PhotobashDocker(DockWidget):
 
         # Filtering text
         self.filterTextEdit = QLineEdit(self.mainWidget)
-        self.filterTextEdit.setPlaceholderText("Filter images by word...")
+        self.filterTextEdit.setPlaceholderText("Filter images by words...")
         self.filterTextEdit.textChanged.connect(self.updateTextFilter)
 
         if self.directoryPath != "":

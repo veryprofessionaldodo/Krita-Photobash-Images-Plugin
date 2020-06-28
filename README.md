@@ -9,7 +9,7 @@ To use this all you need to do is first [install](https://docs.krita.org/en/user
 - You can filter the images by what you input on the text field. You can even use multiple words like "rocks marble", and it will show all images that have rock OR marble in the name! 
 - If you have more than 9 images, you can pass to the next page by using the arrow buttons in the bottom-left corner. 
 - When you have a document open, click on an image, and it will automatically create a new centered paintable layer with that image.
-- If you want to have finer control of the size of the image to be placed, you can tweak the variable of the image scale, and if you want to use the original image siz, un-tick "Fit to Canvas".
+- If you want to have finer control of the size of the image to be placed, you can tweak the variable of the image scale, and if you want to use the original image size, un-tick "Fit to Canvas".
 
 ### TODO
 
