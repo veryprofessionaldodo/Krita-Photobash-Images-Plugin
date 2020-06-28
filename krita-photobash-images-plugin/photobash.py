@@ -14,6 +14,7 @@ class PhotobashDocker(DockWidget):
     
     filterTextEdit = None
     mainWidget = None
+    changePathButton = None
     imagesButtons = []
 
     def __init__(self):
@@ -34,21 +35,24 @@ class PhotobashDocker(DockWidget):
 
         # Filtering text
         self.filterTextEdit = QLineEdit(self.mainWidget)
-        self.filterTextEdit.setPlaceholderText("Filter image name...")
+        self.filterTextEdit.setPlaceholderText("Filter images by word...")
         self.filterTextEdit.textChanged.connect(self.updateFilters)
 
-        changePathButton = QPushButton("Change Path", self.mainWidget)
-        changePathButton.clicked.connect(self.changePath)
+        if self.directoryPath != "":
+            self.changePathButton = QPushButton("Change References Directory", self.mainWidget)
+        else:
+            self.changePathButton = QPushButton("Set References Directory", self.mainWidget)
+        
+        self.changePathButton.clicked.connect(self.changePath)
 
         mainLayout = QVBoxLayout()
         
         topLayout = QHBoxLayout()
         topLayout.addWidget(self.filterTextEdit)
-        topLayout.addWidget(changePathButton)
+        topLayout.addWidget(self.changePathButton)
 
         imagesLayout = QVBoxLayout()
 
-        
         for i in range(0,3):
             rowLayout = QHBoxLayout()
             
@@ -117,7 +121,7 @@ class PhotobashDocker(DockWidget):
                     
                 it.next()
                 
-        self.updateImages()
+            self.updateImages()
 
     def buttonClick(self, position):
         if position < len(self.foundImages) - len(self.imagesButtons) * self.currPage:
@@ -129,10 +133,9 @@ class PhotobashDocker(DockWidget):
 
         buttonsSize = len(self.imagesButtons)
 
-        maxRange = min(len(self.foundImages) + self.currPage * buttonsSize, buttonsSize)
+        maxRange = min(len(self.foundImages) - self.currPage * buttonsSize, buttonsSize)
         for i in range(0, len(self.imagesButtons)):
             if i < maxRange:
-                print(self.foundImages[i])
                 pixmap = QPixmap(self.foundImages[i + buttonsSize * self.currPage])
                 icon = QIcon(pixmap)
 
@@ -144,16 +147,15 @@ class PhotobashDocker(DockWidget):
     def changePath(self):
         fileDialog = QFileDialog(QWidget(self));
         fileDialog.setFileMode(QFileDialog.DirectoryOnly);
-        
-        print(self.directoryPath)
-
+            
         if self.directoryPath == "":
             self.directoryPath = fileDialog.getExistingDirectory()
             Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
         else: 
             self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", self.directoryPath)
             Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
-                
+        
+        self.changePathButton.setText("Change References Directory")
     
     def addPhoto(self, photoPath):
         # Get the document:
@@ -179,4 +181,3 @@ class PhotobashDocker(DockWidget):
             
 
 Krita.instance().addDockWidgetFactory(DockWidgetFactory("PhotobashDocker", DockWidgetFactoryBase.DockRight, PhotobashDocker))
-
