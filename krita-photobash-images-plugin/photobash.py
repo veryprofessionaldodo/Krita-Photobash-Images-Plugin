@@ -257,7 +257,11 @@ class PhotobashDocker(DockWidget):
                     newHeight = doc.bounds().height() * self.currImageScale / 100 
 
                     activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
+            else: 
+                newWidth = activeNode.bounds().width() * self.currImageScale / 100
+                newHeight = activeNode.bounds().height() * self.currImageScale / 100 
 
+                activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
             # Center image
             offsetX = doc.bounds().width()/2 - activeNode.bounds().center().x() 
             offsetY = doc.bounds().height()/2 - activeNode.bounds().center().y() 

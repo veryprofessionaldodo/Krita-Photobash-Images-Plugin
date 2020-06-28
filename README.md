@@ -3,7 +3,7 @@
 A simple Krita Plugin that lists the images you have on a folder you specify, with the ability to filter by words in the path. 
 
 To use this all you need to do is first [install](https://docs.krita.org/en/user_manual/python_scripting/krita_python_plugin_howto.html) this plugin. A tl;dr of this is: 
-- If you're on Linux, drag all the contents of this repository to ~/.local/share/krita/pykrita. On Windows I'm not sure what's the folder is, but you can open the resources folder as highlighted on the link posted above. 
+- If you're on Linux, drag all the contents of this repository to "~/.local/share/krita/pykrita". On Windows that path is "C:\Users\username\AppData\Roaming\krita\pykrita". 
 - When inside Krita, activate the docker by going to Settings > Dockers > Photobash Images, and drag it to where you want. 
 - Set the references directory. This can be any folder on your drive, and inside of it you can have whatever folders you want, so you can stay organized.
 - You can filter the images by what you input on the text field. You can even use multiple words like "rocks marble", and it will show all images that have rock OR marble in the name! 
