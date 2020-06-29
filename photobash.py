@@ -277,4 +277,3 @@ class PhotobashDocker(DockWidget):
             Krita.instance().activeDocument().refreshProjection()
         
 
-Krita.instance().addDockWidgetFactory(DockWidgetFactory("PhotobashDocker", DockWidgetFactoryBase.DockRight, PhotobashDocker))

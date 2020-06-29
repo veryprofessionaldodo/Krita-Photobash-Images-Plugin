@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Service
 ServiceTypes=Krita/PythonPlugin
-X-KDE-Library=krita-photobash-images-plugin
+X-KDE-Library=photobash_images
 X-Python-2-Compatible=false
 Name=Krita Photobash Images
 Comment=A plugin to fetch images from a specified folder. Very useful for photobashing!
