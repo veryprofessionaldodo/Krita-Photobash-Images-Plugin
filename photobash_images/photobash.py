@@ -106,7 +106,7 @@ class PhotobashDocker(DockWidget):
         nextButton.setArrowType(Qt.ArrowType.RightArrow)
 
         self.sliderLabel = QLabel(self.mainWidget)
-        self.sliderLabel.setText(f"Image Scale : {self.currImageScale}%")
+        self.sliderLabel.setText(f"Scale : {self.currImageScale}%")
         self.sliderLabel.setMaximumWidth(self.sliderLabel.fontMetrics().width(self.sliderLabel.text()))
         
         slider = QSlider(Qt.Horizontal, self)
@@ -117,7 +117,7 @@ class PhotobashDocker(DockWidget):
         slider.valueChanged.connect(self.updateScale)
 
         fitBordersLabel = QLabel(self.mainWidget)
-        fitBordersLabel.setText("Fit to Canvas")
+        fitBordersLabel.setText("Fit Canvas")
         fitBordersLabel.setMaximumWidth(fitBordersLabel.fontMetrics().width(fitBordersLabel.text()))
 
         fitCanvasCheckBox = QCheckBox(self.mainWidget)
