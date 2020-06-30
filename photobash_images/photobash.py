@@ -218,7 +218,7 @@ class PhotobashDocker(DockWidget):
         fileDialog.setFileMode(QFileDialog.DirectoryOnly);
             
         if self.directoryPath == "":
-            self.directoryPath = fileDialog.getExistingDirectory()
+            self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", QStandardPaths.writableLocation(QStandardPaths.PicturesLocation))
             Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
         else: 
             self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", self.directoryPath)
