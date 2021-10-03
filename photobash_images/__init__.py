@@ -17,6 +17,6 @@
 
 
 from krita import *
-from .photobash import *
+from .photobash_images_docker import *
 
 Krita.instance().addDockWidgetFactory(DockWidgetFactory("PhotobashDocker", DockWidgetFactoryBase.DockRight, PhotobashDocker))
