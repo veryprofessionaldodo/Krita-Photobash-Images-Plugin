@@ -70,6 +70,8 @@ class PhotobashDocker(DockWidget):
 
         self.qimage_display = QImage()
         self.qimage_button = QImage()
+        self.numImages = 9
+
     def User_interface(self):
         # Window
         self.setWindowTitle("Photobash Images")
@@ -82,115 +84,27 @@ class PhotobashDocker(DockWidget):
         # Adjust Layouts
         self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
     def Modules(self):
         # Display
         self.imageWidget = Photobash_Display(self.layout.imageWidget)
         self.imageWidget.SIGNAL_HOVER.connect(self.Cursor_Hover)
         self.imageWidget.SIGNAL_CLOSE.connect(self.PB_Display_Close)
 
-        # Buttons 0
-        self.imagesButtons0 = Photobash_Button(self.layout.imagesButtons0)
-        self.imagesButtons0.Number(0)
-        self.imagesButtons0.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons0.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons0.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons0.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons0.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons0.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons0.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 1
-        self.imagesButtons1 = Photobash_Button(self.layout.imagesButtons1)
-        self.imagesButtons1.Number(1)
-        self.imagesButtons1.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons1.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons1.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons1.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons1.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons1.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons1.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 2
-        self.imagesButtons2 = Photobash_Button(self.layout.imagesButtons2)
-        self.imagesButtons2.Number(2)
-        self.imagesButtons2.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons2.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons2.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons2.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons2.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons2.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons2.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 3
-        self.imagesButtons3 = Photobash_Button(self.layout.imagesButtons3)
-        self.imagesButtons3.Number(3)
-        self.imagesButtons3.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons3.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons3.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons3.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons3.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons3.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons3.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 4
-        self.imagesButtons4 = Photobash_Button(self.layout.imagesButtons4)
-        self.imagesButtons4.Number(4)
-        self.imagesButtons4.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons4.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons4.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons4.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons4.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons4.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons4.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 5
-        self.imagesButtons5 = Photobash_Button(self.layout.imagesButtons5)
-        self.imagesButtons5.Number(5)
-        self.imagesButtons5.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons5.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons5.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons5.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons5.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons5.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons5.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 6
-        self.imagesButtons6 = Photobash_Button(self.layout.imagesButtons6)
-        self.imagesButtons6.Number(6)
-        self.imagesButtons6.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons6.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons6.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons6.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons6.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons6.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons6.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 7
-        self.imagesButtons7 = Photobash_Button(self.layout.imagesButtons7)
-        self.imagesButtons7.Number(7)
-        self.imagesButtons7.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons7.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons7.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons7.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons7.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons7.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons7.SIGNAL_DRAG.connect(self.PB_Drag)
-        # Buttons 8
-        self.imagesButtons8 = Photobash_Button(self.layout.imagesButtons8)
-        self.imagesButtons8.Number(8)
-        self.imagesButtons8.SIGNAL_HOVER.connect(self.Cursor_Hover)
-        self.imagesButtons8.SIGNAL_LMB.connect(self.PB_Set_Image)
-        self.imagesButtons8.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-        self.imagesButtons8.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-        self.imagesButtons8.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-        self.imagesButtons8.SIGNAL_BASH.connect(self.PB_Bash)
-        self.imagesButtons8.SIGNAL_DRAG.connect(self.PB_Drag)
+        self.imagesButtons = []
 
-        # Recreate Buttons Variable
-        self.imagesButtons = [
-            self.imagesButtons0,
-            self.imagesButtons1,
-            self.imagesButtons2,
-            self.imagesButtons3,
-            self.imagesButtons4,
-            self.imagesButtons5,
-            self.imagesButtons6,
-            self.imagesButtons7,
-            self.imagesButtons8,
-            ]
+        for i in range(0, self.numImages):
+            button = "imagesButtons" + str(i)
+
+            imageButton = Photobash_Button(self.layout[button])
+            imageButton.SIGNAL_HOVER.connect(self.Cursor_Hover)
+            imageButton.SIGNAL_LMB.connect(self.PB_Set_Image)
+            imageButton.SIGNAL_WUP.connect(self.PB_Wheel_Up)
+            imageButton.SIGNAL_WDN.connect(self.PB_Wheel_Down)
+            imageButton.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
+            imageButton.SIGNAL_BASH.connect(self.PB_Bash)
+            imageButton.SIGNAL_DRAG.connect(self.PB_Drag)
+
     def Setup(self):
         pass
     def Connect(self):
