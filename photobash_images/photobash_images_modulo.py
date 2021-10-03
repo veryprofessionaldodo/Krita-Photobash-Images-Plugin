@@ -24,13 +24,13 @@ class Photobash_Display(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
     SIGNAL_CLOSE = QtCore.pyqtSignal(int)
 
-
     def __init__(self, parent):
-        super(Photobash_Display, self).__init__(parent)
+        super().__init__(parent)
         # QImage
         self.path = ""
         self.qimage = QImage(self.path)
         self.pixmap = QPixmap(50, 50).fromImage(self.qimage)
+
     def sizeHint(self):
         return QtCore.QSize(5000,5000)
 
@@ -42,6 +42,7 @@ class Photobash_Display(QWidget):
     def mousePressEvent(self, event):
         if (event.modifiers() == QtCore.Qt.ShiftModifier or event.modifiers() == QtCore.Qt.ControlModifier or event.modifiers() == QtCore.Qt.AltModifier):
             self.SIGNAL_CLOSE.emit(0)
+
     def mouseDoubleClickEvent(self, event):
         self.SIGNAL_CLOSE.emit(0)
 
@@ -65,6 +66,7 @@ class Photobash_Display(QWidget):
         self.path = path
         self.qimage = qimage
         self.pixmap = QPixmap(50, 50).fromImage(qimage)
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
@@ -101,7 +103,6 @@ class Photobash_Display(QWidget):
         # Restore Space
         painter.restore()
 
-
 class Photobash_Button(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
     SIGNAL_LMB = QtCore.pyqtSignal(int)
@@ -112,7 +113,7 @@ class Photobash_Button(QWidget):
     SIGNAL_DRAG = QtCore.pyqtSignal(int)
 
     def __init__(self, parent):
-        super(Photobash_Button, self).__init__(parent)
+        super().__init__()
         # Variables
         self.number = None
         # QImage

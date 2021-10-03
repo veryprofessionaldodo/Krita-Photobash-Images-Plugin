@@ -19,14 +19,13 @@
 #\\ Import Modules #############################################################
 from krita import *
 from PyQt5 import QtWidgets, QtCore, uic
-import math
 from .photobash_images_modulo import (
     Photobash_Display,
     Photobash_Button,
-    )
-#//
+)
+# //
 #\\ Global Variables ###########################################################
-#//
+# //
 
 class PhotobashDocker(DockWidget):
     application_name = "Photobash"
@@ -48,7 +47,7 @@ class PhotobashDocker(DockWidget):
 
     #\\ Initialize #############################################################
     def __init__(self):
-        super(PhotobashDocker, self).__init__()
+        super().__init__()
 
         # # Source
         # self.Default()
@@ -57,9 +56,9 @@ class PhotobashDocker(DockWidget):
         self.Variables()
         self.User_interface()
         self.Modules()
-        self.Setup()
-        self.Style()
-        self.Settings_Load()
+        #self.Setup()
+        #self.Style()
+        #self.Settings_Load()
 
     def Variables(self):
         self.foundImages = []
@@ -76,16 +75,20 @@ class PhotobashDocker(DockWidget):
         self.setWindowTitle("Photobash Images")
 
         # Path Name
-        self.directory_plugin = str(os.path.dirname(os.path.realpath(__file__)))
+        self.directory_plugin = str(
+            os.path.dirname(os.path.realpath(__file__)))
 
         # Photo Bash Docker
         self.window = QWidget()
-        self.layout = uic.loadUi(self.directory_plugin + '/photobash_images_docker.ui', self.window)
+        self.layout = uic.loadUi(
+            self.directory_plugin + '/photobash_images_docker.ui', self.window)
         self.setWidget(self.window)
 
         # Adjust Layouts
-        self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
-        self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.layout.imageWidget.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Ignored)
+        self.layout.middleWidget.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     def Modules(self):
         # Display
@@ -96,8 +99,14 @@ class PhotobashDocker(DockWidget):
         self.images_buttons = []
 
         for i in range(0, self.numImages):
-            button = "images_buttons" + str(i)
-
+            button = "imagesButtons" + str(i)
+            print("vivas!!!", button)
+            print(self.layout)
+            print(self.layout.imagesButtons0)
+            print("ola?")
+            print(self.layout["imagesButtons0"])
+            print("afinal dá")
+            
             image_button = Photobash_Button(self.layout[button])
             image_button.SIGNAL_HOVER.connect(self.cursorHover)
             image_button.SIGNAL_LMB.connect(self.PB_Set_Image)
@@ -111,7 +120,7 @@ class PhotobashDocker(DockWidget):
 
     def Setup(self):
         pass
-    
+
     def Connect(self):
         # UI Top
         # self.layout.filter_text_edit.textChanged.connect(self.Update_Text_Filter)
@@ -121,12 +130,13 @@ class PhotobashDocker(DockWidget):
         # self.layout.next_button.clicked.connect(lambda: self.Update_Current_Page(1))
         # self.layout.slider.valueChanged.connect(self.Update_Scale)
         # self.layout.fitCanvasCheckBox.stateChanged.connect(self.Changed_Fit_Canvas)
+
     def Style(self):
         self.cursorHover(None)
 
-    #//
+    # //
     #\\ Top Functions ##########################################################
-     def updateTextFilter(self):
+    def updateTextFilter(self):
         newImages = []
         self.currPage = 0
 
@@ -153,7 +163,7 @@ class PhotobashDocker(DockWidget):
                         self.updateImages()
                         return
 
-    #//
+    # //
     #\\ Bottom Functions #######################################################
     def updateCurrPage(self, increment):
         if (self.currPage == 0 and increment == -1) or \
@@ -176,7 +186,7 @@ class PhotobashDocker(DockWidget):
             self.fit_canvas_checked = False
             Application.writeSetting(self.application_name, self.fit_canvas_setting, "false")
 
-    #//
+    # //
     #\\ Independant Functions ##################################################
     def Clear_Focus(self):
         self.layout.filter_text_edit.clearFocus()
@@ -193,7 +203,7 @@ class PhotobashDocker(DockWidget):
             self.layout.imageWidget.setStyleSheet(bg_hover)
         
         for i in range(0, len(self.images_buttons)):
-            button = "images_buttons" + str(i)
+            button = "imagesButtons" + str(i)
 
             self.layout[button].setStyleSheet(bg_alpha)
                 
@@ -278,7 +288,7 @@ class PhotobashDocker(DockWidget):
         document = Krita.instance().openDocument(path)
         Application.activeWindow().addView(document)
 
-    #//
+    # //
     #\\ Signals ################################################################
     def PB_Set_Image(self, SIGNAL_LMB):
         QtCore.qDebug("Image Set")
@@ -314,7 +324,7 @@ class PhotobashDocker(DockWidget):
     def PB_Drag(self):
         QtCore.qDebug("Drag")
 
-    #//
+    # //
     #\\ Events #################################################################
     def leaveEvent(self, event):
         self.Clear_Focus()
@@ -322,19 +332,19 @@ class PhotobashDocker(DockWidget):
     def closeEvent(self, event):
         self.Settings_Save()
 
-    #//
+    # //
     #\\ Settings ###############################################################
     def Settings_Load(self):
         pass
     def Settings_Save(self):
         pass
 
-    #//
+    # //
     #\\ Canvas Changed #########################################################
     def canvasChanged(self, canvas):
         pass
 
-    #//
+    # //
     #\\ Notes ##################################################################
     """
     Variables
@@ -368,7 +378,7 @@ class PhotobashDocker(DockWidget):
     qimage = QImage(path)
     self.images_buttons0.Input_Image(path, qimage)
     """
-    #//
+    # //
 
 
 
@@ -566,4 +576,4 @@ class PhotobashDocker(DockWidget):
 
             Krita.instance().activeDocument().refreshProjection()
 
-    #//
+    # //
