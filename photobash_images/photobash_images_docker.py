@@ -39,7 +39,6 @@ class PhotobashDocker(DockWidget):
     curr_image_scale = 100
     fit_canvas_checked = True
 
-    filter_text_edit = None
     main_widget = None
     change_path_button = None
     slider_label = None
@@ -58,7 +57,7 @@ class PhotobashDocker(DockWidget):
         self.Modules()
         #self.Setup()
         #self.Style()
-        #self.Settings_Load()
+        #self.settingsLoad()
 
     def Variables(self):
         self.foundImages = []
@@ -99,15 +98,9 @@ class PhotobashDocker(DockWidget):
         self.images_buttons = []
 
         for i in range(0, self.numImages):
-            button = "imagesButtons" + str(i)
-            print("vivas!!!", button)
-            print(self.layout)
-            print(self.layout.imagesButtons0)
-            print("ola?")
-            print(self.layout["imagesButtons0"])
-            print("afinal dá")
+            button = self.layout.imagesButtons0
             
-            image_button = Photobash_Button(self.layout[button])
+            image_button = Photobash_Button(button)
             image_button.SIGNAL_HOVER.connect(self.cursorHover)
             image_button.SIGNAL_LMB.connect(self.PB_Set_Image)
             image_button.SIGNAL_WUP.connect(self.PB_Wheel_Up)
@@ -116,20 +109,20 @@ class PhotobashDocker(DockWidget):
             image_button.SIGNAL_BASH.connect(self.PB_Bash)
             image_button.SIGNAL_DRAG.connect(self.PB_Drag)
 
-            self.images_buttons.push(image_button)
+            self.images_buttons.append(image_button)
 
     def Setup(self):
         pass
 
     def Connect(self):
         # UI Top
-        # self.layout.filter_text_edit.textChanged.connect(self.Update_Text_Filter)
+        self.layout.filter_text_edit.textChanged.connect(self.updateTextFilter)
         self.layout.change_path_button.clicked.connect(self.changePath)
         # UI Bottom
-        # self.layout.previousButton.clicked.connect(lambda: self.Update_Current_Page(-1))
-        # self.layout.next_button.clicked.connect(lambda: self.Update_Current_Page(1))
-        # self.layout.slider.valueChanged.connect(self.Update_Scale)
-        # self.layout.fitCanvasCheckBox.stateChanged.connect(self.Changed_Fit_Canvas)
+        self.layout.previousButton.clicked.connect(lambda: self.Update_Current_Page(-1))
+        self.layout.next_button.clicked.connect(lambda: self.Update_Current_Page(1))
+        self.layout.slider.valueChanged.connect(self.updateScale)
+        self.layout.fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
 
     def Style(self):
         self.cursorHover(None)
@@ -145,7 +138,7 @@ class PhotobashDocker(DockWidget):
 
             while(it.hasNext()):
 
-                stringsInText = self.layout.filter_text_edit.text().lower().split(" ")
+                stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
 
                 for word in stringsInText:
                     if word in it.filePath().lower() and (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()):
@@ -188,8 +181,8 @@ class PhotobashDocker(DockWidget):
 
     # //
     #\\ Independant Functions ##################################################
-    def Clear_Focus(self):
-        self.layout.filter_text_edit.clearFocus()
+    def clearFocus(self):
+        self.layout.filterTextEdit.clearFocus()
 
     def cursorHover(self, SIGNAL_HOVER):
         # Reset Hover
@@ -327,16 +320,17 @@ class PhotobashDocker(DockWidget):
     # //
     #\\ Events #################################################################
     def leaveEvent(self, event):
-        self.Clear_Focus()
-        self.Settings_Save()
+        self.clearFocus()
+        self.settingSave()
     def closeEvent(self, event):
-        self.Settings_Save()
+        self.settingSave()
 
     # //
     #\\ Settings ###############################################################
-    def Settings_Load(self):
+    def settingsLoad(self):
         pass
-    def Settings_Save(self):
+
+    def settingSave(self):
         pass
 
     # //
@@ -383,108 +377,6 @@ class PhotobashDocker(DockWidget):
 
 
     #\\ Source ###########################################################################################################
-    def Default(self):
-        # Read settings
-        self.directoryPath = Application.readSetting(self.application_name, self.references_setting, "")
-
-        if Application.readSetting(self.application_name, self.fit_canvas_setting, "true") == "true":
-            self.fit_canvas_checked = True
-        else:
-            self.fit_canvas_checked = False
-
-        self.curr_image_scale = 100
-
-        self.setLayout()
-
-    def setLayout(self):
-        self.main_widget = QWidget(self)
-        self.setWidget(self.main_widget)
-
-        # Filtering text
-        self.filter_text_edit = QLineEdit(self.main_widget)
-        self.filter_text_edit.setPlaceholderText("Filter images by words...")
-        self.filter_text_edit.textChanged.connect(self.updateTextFilter)
-
-        if self.directoryPath != "":
-            self.change_path_button = QPushButton("Change References Directory", self.main_widget)
-        else:
-            self.change_path_button = QPushButton("Set References Directory", self.main_widget)
-
-        self.change_path_button.clicked.connect(self.changePath)
-
-        mainLayout = QVBoxLayout()
-
-        topLayout = QHBoxLayout()
-        topLayout.addWidget(self.filter_text_edit)
-        topLayout.addWidget(self.change_path_button)
-
-        imagesLayout = QVBoxLayout()
-
-        for i in range(0,3):
-            rowLayout = QHBoxLayout()
-
-            for j in range(0,3):
-                button = QToolButton(self.main_widget)
-                button.setMaximumHeight(3000)
-                button.setMaximumWidth(3000)
-                button.setMinimumHeight(self.main_widget.height() / 3)
-                button.setMinimumWidth(self.main_widget.width() / 3)
-
-                self.images_buttons.append(button)
-
-                rowLayout.addWidget(button)
-
-            imagesLayout.addLayout(rowLayout)
-
-        for i in range(0, len(self.images_buttons)):
-            self.images_buttons[i].clicked.connect(lambda: self.buttonClick(i))
-        
-        mainLayout.addLayout(topLayout)
-        mainLayout.addLayout(imagesLayout)
-
-        bottomLayout = QHBoxLayout()
-        previousButton = QToolButton(self.main_widget)
-        previousButton.setMaximumWidth(3000)
-        previousButton.clicked.connect(lambda: self.updateCurrPage(-1))
-        previousButton.setArrowType(Qt.ArrowType.LeftArrow)
-
-        next_button = QToolButton(self.main_widget)
-        next_button.setMaximumWidth(3000)
-        next_button.clicked.connect(lambda: self.updateCurrPage(1))
-        next_button.setArrowType(Qt.ArrowType.RightArrow)
-
-        self.slider_label = QLabel(self.main_widget)
-        self.slider_label.setText(f"Scale : {self.curr_image_scale}%")
-        self.slider_label.setMaximumWidth(self.slider_label.fontMetrics().width(self.slider_label.text()))
-
-        slider = QSlider(Qt.Horizontal, self)
-        slider.setValue(self.curr_image_scale)
-        slider.setMaximum(100)
-        slider.setMinimum(10)
-        slider.setMaximumWidth(3000)
-        slider.valueChanged.connect(self.updateScale)
-
-        fitBordersLabel = QLabel(self.main_widget)
-        fitBordersLabel.setText("Fit Canvas")
-        fitBordersLabel.setMaximumWidth(fitBordersLabel.fontMetrics().width(fitBordersLabel.text()))
-
-        fitCanvasCheckBox = QCheckBox(self.main_widget)
-        fitCanvasCheckBox.setCheckState(self.fit_canvas_checked)
-        fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
-        fitCanvasCheckBox.setTristate(False)
-
-        bottomLayout.addWidget(previousButton)
-        bottomLayout.addWidget(next_button)
-        bottomLayout.addWidget(self.slider_label)
-        bottomLayout.addWidget(slider)
-        bottomLayout.addWidget(fitBordersLabel)
-        bottomLayout.addWidget(fitCanvasCheckBox)
-
-        mainLayout.addLayout(bottomLayout)
-
-        self.main_widget.setLayout(mainLayout)
-
-        self.updateTextFilter()
 
     def buttonClick(self, position):
         if position < len(self.foundImages) - len(self.images_buttons) * self.currPage:
