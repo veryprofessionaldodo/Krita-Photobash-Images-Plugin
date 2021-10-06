@@ -18,70 +18,70 @@
 
 #\\ Import Modules #############################################################
 from krita import *
+import math
 from PyQt5 import QtWidgets, QtCore, uic
 from .photobash_images_modulo import (
     Photobash_Display,
     Photobash_Button,
 )
+
 # //
 #\\ Global Variables ###########################################################
 # //
 
 class PhotobashDocker(DockWidget):
-    application_name = "Photobash"
-    references_setting = "referencesDirectory"
-    fit_canvas_setting = "fitToCanvas"
-
-    # foundImages = []
-
-    # directoryPath = ""
-    # currPage = 0
-    curr_image_scale = 100
-    fit_canvas_checked = True
-
-    main_widget = None
-    change_path_button = None
-    slider_label = None
-    images_buttons = []
-
     #\\ Initialize #############################################################
     def __init__(self):
         super().__init__()
 
-        # # Source
-        # self.Default()
-
         # Construct
-        self.Variables()
-        self.User_interface()
-        self.Modules()
-        #self.Setup()
-        #self.Style()
-        #self.settingsLoad()
+        self.setupVariables()
+        self.setupInterface()
+        self.setupModules()
+        self.setStyle()
+        self.settingsLoad()
 
-    def Variables(self):
+    def setupVariables(self):
+        self.mainWidget = QWidget(self)
+
+        self.applicationName = "Photobash"
+        self.referencesSetting = "referencesDirectory"
+        self.fitCanvasSetting = "fitToCanvas"
+
+        self.currImageScale = 100
+        self.fitCanvasChecked = True
+
+        self.imagesButtons = []
         self.foundImages = []
 
         self.currPage = 0
-        self.directoryPath = ""
+        self.directoryPath = Application.readSetting(self.applicationName, self.referencesSetting, "")
 
-        self.qimage_display = QImage()
-        self.qimage_button = QImage()
-        self.numImages = 9
-
-    def User_interface(self):
+    def setupInterface(self):
         # Window
         self.setWindowTitle("Photobash Images")
 
         # Path Name
-        self.directory_plugin = str(
+        self.directoryPlugin = str(
             os.path.dirname(os.path.realpath(__file__)))
 
         # Photo Bash Docker
         self.window = QWidget()
         self.layout = uic.loadUi(
-            self.directory_plugin + '/photobash_images_docker.ui', self.window)
+            self.directoryPlugin + '/photobash_images_docker.ui', self.window)
         self.setWidget(self.window)
+
+        self.layoutButtons = [
+            self.layout.imagesButtons0,
+            self.layout.imagesButtons1,
+            self.layout.imagesButtons2,
+            self.layout.imagesButtons3,
+            self.layout.imagesButtons4,
+            self.layout.imagesButtons5,
+            self.layout.imagesButtons6,
+            self.layout.imagesButtons7,
+            self.layout.imagesButtons8,
+        ]
 
         # Adjust Layouts
         self.layout.imageWidget.setSizePolicy(
@@ -89,46 +89,44 @@ class PhotobashDocker(DockWidget):
         self.layout.middleWidget.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-    def Modules(self):
+        # setup connections for top elements
+        self.layout.filterTextEdit.textChanged.connect(self.updateTextFilter)
+        self.layout.changePathButton.clicked.connect(self.changePath)
+        # setup connections for bottom elements
+        self.layout.previousButton.clicked.connect(lambda: self.updateCurrentPage(-1))
+        self.layout.nextButton.clicked.connect(lambda: self.updateCurrentPage(1))
+        self.layout.slider.valueChanged.connect(self.updateScale)
+        self.layout.fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
+
+    def setupModules(self):
         # Display
         self.imageWidget = Photobash_Display(self.layout.imageWidget)
         self.imageWidget.SIGNAL_HOVER.connect(self.cursorHover)
         self.imageWidget.SIGNAL_CLOSE.connect(self.PB_Display_Close)
 
-        self.images_buttons = []
-
-        for i in range(0, self.numImages):
-            button = self.layout.imagesButtons0
+        self.imagesButtons = []
+        
+        for i in range(0, len(self.layoutButtons)):
+            layoutButton = self.layoutButtons[i]
             
-            image_button = Photobash_Button(button)
-            image_button.SIGNAL_HOVER.connect(self.cursorHover)
-            image_button.SIGNAL_LMB.connect(self.PB_Set_Image)
-            image_button.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-            image_button.SIGNAL_WDN.connect(self.PB_Wheel_Down)
-            image_button.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-            image_button.SIGNAL_BASH.connect(self.PB_Bash)
-            image_button.SIGNAL_DRAG.connect(self.PB_Drag)
+            imageButton = Photobash_Button(layoutButton)
+            # imageButton = layoutButton
+            imageButton.SIGNAL_HOVER.connect(self.cursorHover)
+            imageButton.SIGNAL_LMB.connect(lambda: self.buttonClick(i))
+            # imageButton.SIGNAL_LMB.connect(self.PB_Set_Image)
+            imageButton.SIGNAL_WUP.connect(self.PB_Wheel_Up)
+            imageButton.SIGNAL_WDN.connect(self.PB_Wheel_Down)
+            imageButton.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
+            imageButton.SIGNAL_BASH.connect(self.PB_Bash)
+            imageButton.SIGNAL_DRAG.connect(self.PB_Drag)
 
-            self.images_buttons.append(image_button)
+            self.imagesButtons.append(imageButton)
 
-    def Setup(self):
-        pass
-
-    def Connect(self):
-        # UI Top
-        self.layout.filter_text_edit.textChanged.connect(self.updateTextFilter)
-        self.layout.change_path_button.clicked.connect(self.changePath)
-        # UI Bottom
-        self.layout.previousButton.clicked.connect(lambda: self.Update_Current_Page(-1))
-        self.layout.next_button.clicked.connect(lambda: self.Update_Current_Page(1))
-        self.layout.slider.valueChanged.connect(self.updateScale)
-        self.layout.fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
-
-    def Style(self):
+    def setStyle(self):
         self.cursorHover(None)
 
-    # //
-    #\\ Top Functions ##########################################################
+    # executed whenever the text of the images filter is updated,
+    # selects the images that meet the criteria
     def updateTextFilter(self):
         newImages = []
         self.currPage = 0
@@ -137,7 +135,6 @@ class PhotobashDocker(DockWidget):
             it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
 
             while(it.hasNext()):
-
                 stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
 
                 for word in stringsInText:
@@ -146,6 +143,7 @@ class PhotobashDocker(DockWidget):
 
                 it.next()
 
+            # list of images that match the filter
             if len(self.foundImages) != len(newImages):
                 self.foundImages = newImages
                 self.updateImages()
@@ -158,9 +156,9 @@ class PhotobashDocker(DockWidget):
 
     # //
     #\\ Bottom Functions #######################################################
-    def updateCurrPage(self, increment):
+    def updateCurrentPage(self, increment):
         if (self.currPage == 0 and increment == -1) or \
-            ((self.currPage + 1) * len(self.images_buttons) > len(self.foundImages) and increment == 1) or \
+            ((self.currPage + 1) * len(self.imagesButtons) > len(self.foundImages) and increment == 1) or \
             len(self.foundImages) == 0:
             return
 
@@ -168,16 +166,16 @@ class PhotobashDocker(DockWidget):
         self.updateImages()
 
     def updateScale(self, value):
-        self.curr_image_scale = value
-        self.slider_label.setText(f"Image Scale : {self.curr_image_scale}%")  
+        self.currImageScale = value
+        self.layout.sliderLabel.setText(f"Image Scale : {self.currImageScale}%")  
 
     def changedFitCanvas(self, state):
         if state == Qt.Checked:
-            self.fit_canvas_checked = True
-            Application.writeSetting(self.application_name, self.fit_canvas_setting, "true")
+            self.fitCanvasChecked = True
+            Application.writeSetting(self.applicationName, self.fitCanvasSetting, "true")
         else:
-            self.fit_canvas_checked = False
-            Application.writeSetting(self.application_name, self.fit_canvas_setting, "false")
+            self.fitCanvasChecked = False
+            Application.writeSetting(self.applicationName, self.fitCanvasSetting, "false")
 
     # //
     #\\ Independant Functions ##################################################
@@ -195,38 +193,54 @@ class PhotobashDocker(DockWidget):
         if SIGNAL_HOVER == "D":
             self.layout.imageWidget.setStyleSheet(bg_hover)
         
-        for i in range(0, len(self.images_buttons)):
-            button = "imagesButtons" + str(i)
-
-            self.layout[button].setStyleSheet(bg_alpha)
+        # normal images
+        for i in range(0, len(self.layoutButtons)):
+            self.layoutButtons[i].setStyleSheet(bg_alpha)
                 
             if SIGNAL_HOVER == str(i):
-                self.layout[button].setStyleSheet(bg_hover)
+                self.layoutButtons[i].setStyleSheet(bg_hover)
         
-    def Update_Images(self):
+    def updateImages(self):
         maxWidth = 0
         maxHeight = 0
 
-        buttonsSize = len(self.images_buttons)
+        buttonsSize = len(self.imagesButtons)
 
         for i in range(0, buttonsSize):
-            if maxWidth < self.images_buttons[i].width():
-                maxWidth = self.images_buttons[i].width()
-            if maxHeight < self.images_buttons[i].height():
-                maxHeight = self.images_buttons[i].height()
+            if maxWidth < self.imagesButtons[i].width():
+                maxWidth = self.imagesButtons[i].width()
+            if maxHeight < self.imagesButtons[i].height():
+                maxHeight = self.imagesButtons[i].height()
 
+        # don't try to access image that isn't there
         maxRange = min(len(self.foundImages) - self.currPage * buttonsSize, buttonsSize)
 
-        for i in range(0, len(self.images_buttons)):
+        for i in range(0, len(self.imagesButtons)):
             if i < maxRange:
-                # images_buttons[i].Input_Image(path, QImage(path))
+                # image is within valid range, apply it
+                path = self.foundImages[i + buttonsSize * self.currPage]
+                self.imagesButtons[i].getImage(path)
 
-                icon = QIcon(self.foundImages[i + buttonsSize * self.currPage])
+                #pixmap = QPixmap(self.foundImages[i])
+                # icon = QIcon(self.foundImages[i + buttonsSize * self.currPage])
 
-                self.images_buttons[i].setIcon(icon)
-                self.images_buttons[i].setIconSize(QSize(int(maxWidth), int(maxHeight)))
+                # self.imagesButtons[i].setIcon(icon)
+                # self.imagesButtons[i].setIconSize(QSize(int(maxWidth), int(maxHeight)))
+
             else:
-                self.images_buttons[i].setIconSize(QSize(0,0))
+                # is invalid image, reset
+                #self.imagesButtons[i].setIconSize(QSize(0,0))
+                pass
+
+        # update text for pagination
+        maxNumPage = math.ceil(len(self.foundImages) / len(self.layoutButtons))
+        currPage = self.currPage + 1
+         
+        if maxNumPage == 0: 
+            currPage = 0
+        # currPage is the index, but we want to present it in a user friendly way, 
+        # so it starts at 1
+        self.layout.paginationLabel.setText(f"{str(currPage)}/{str(maxNumPage)}")
 
     def addImageLayer(self, photoPath):
         # Get the document:
@@ -252,20 +266,20 @@ class PhotobashDocker(DockWidget):
                 if node.name() == layerName:
                     activeNode = node
 
-            if self.fit_canvas_checked:
+            if self.fitCanvasChecked:
                 if activeNode.bounds().width() / activeNode.bounds().height() > doc.bounds().width() / doc.bounds().height():
                     scalingFactor = doc.bounds().width() / activeNode.bounds().width()
-                    newWidth = doc.bounds().width() * self.curr_image_scale / 100
-                    newHeight = activeNode.bounds().height() * scalingFactor * self.curr_image_scale / 100
+                    newWidth = doc.bounds().width() * self.currImageScale / 100
+                    newHeight = activeNode.bounds().height() * scalingFactor * self.currImageScale / 100
                 else:
                     scalingFactor = doc.bounds().height() / activeNode.bounds().height()
-                    newWidth = activeNode.bounds().width() * scalingFactor * self.curr_image_scale / 100
-                    newHeight = doc.bounds().height() * self.curr_image_scale / 100
+                    newWidth = activeNode.bounds().width() * scalingFactor * self.currImageScale / 100
+                    newHeight = doc.bounds().height() * self.currImageScale / 100
 
                     activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
             else:
-                newWidth = activeNode.bounds().width() * self.curr_image_scale / 100
-                newHeight = activeNode.bounds().height() * self.curr_image_scale / 100
+                newWidth = activeNode.bounds().width() * self.currImageScale / 100
+                newHeight = activeNode.bounds().height() * self.currImageScale / 100
 
                 activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
 
@@ -303,7 +317,7 @@ class PhotobashDocker(DockWidget):
 
     def PB_Display_Open(self):
         QtCore.qDebug("Single Open")
-        # self.imageWidget.Input_Image(path, QImage(path))
+        self.imageWidget.getImage(path)
         self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
     def PB_Display_Close(self):
@@ -365,58 +379,32 @@ class PhotobashDocker(DockWidget):
     self.layout.images_buttons0
 
     Accessing button Module
-    self.images_buttons0
+    self.imagesButtons0
 
     sending files to Painter
     path = string with full file path on hardrive
     qimage = QImage(path)
-    self.images_buttons0.Input_Image(path, qimage)
+    self.imagesButtons0.getImage(path, qimage)
     """
     # //
-
-
-
     #\\ Source ###########################################################################################################
 
     def buttonClick(self, position):
-        if position < len(self.foundImages) - len(self.images_buttons) * self.currPage:
-            self.addImageLayer(self.foundImages[position + len(self.images_buttons) * self.currPage])
-
-    def updateImages(self):
-        maxWidth = 0
-        maxHeight = 0
-
-        buttonsSize = len(self.images_buttons)
-
-        for i in range(0, buttonsSize):
-            if maxWidth < self.images_buttons[i].width():
-                maxWidth = self.images_buttons[i].width()
-            if maxHeight < self.images_buttons[i].height():
-                maxHeight = self.images_buttons[i].height()
-
-        maxRange = min(len(self.foundImages) - self.currPage * buttonsSize, buttonsSize)
-
-        for i in range(0, len(self.images_buttons)):
-            if i < maxRange:
-                icon = QIcon(self.foundImages[i + buttonsSize * self.currPage])
-
-                self.images_buttons[i].setIcon(icon)
-                self.images_buttons[i].setIconSize(QSize(int(maxWidth), int(maxHeight)))
-            else:
-                self.images_buttons[i].setIconSize(QSize(0,0))
+        if position < len(self.foundImages) - len(self.imagesButtons) * self.currPage:
+            self.addImageLayer(self.foundImages[position + len(self.imagesButtons) * self.currPage])
 
     def changePath(self):
         fileDialog = QFileDialog(QWidget(self));
         fileDialog.setFileMode(QFileDialog.DirectoryOnly);
 
         if self.directoryPath == "":
-            self.directoryPath = fileDialog.getExistingDirectory(self.main_widget, "Change Directory for Images", QStandardPaths.writableLocation(QStandardPaths.PicturesLocation))
-            Application.writeSetting(self.application_name, self.references_setting, self.directoryPath)
+            self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", QStandardPaths.writableLocation(QStandardPaths.PicturesLocation))
+            Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
         else:
-            self.directoryPath = fileDialog.getExistingDirectory(self.main_widget, "Change Directory for Images", self.directoryPath)
-            Application.writeSetting(self.application_name, self.references_setting, self.directoryPath)
+            self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", self.directoryPath)
+            Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
 
-        self.change_path_button.setText("Change References Directory")
+        self.layout.changePathButton.setText("Change References Directory")
         self.updateTextFilter()
 
     def addImageLayer(self, photoPath):
@@ -443,20 +431,20 @@ class PhotobashDocker(DockWidget):
                 if node.name() == layerName:
                     activeNode = node
 
-            if self.fit_canvas_checked:
+            if self.fitCanvasChecked:
                 if activeNode.bounds().width() / activeNode.bounds().height() > doc.bounds().width() / doc.bounds().height():
                     scalingFactor = doc.bounds().width() / activeNode.bounds().width()
-                    newWidth = doc.bounds().width() * self.curr_image_scale / 100
-                    newHeight = activeNode.bounds().height() * scalingFactor * self.curr_image_scale / 100
+                    newWidth = doc.bounds().width() * self.currImageScale / 100
+                    newHeight = activeNode.bounds().height() * scalingFactor * self.currImageScale / 100
                 else:
                     scalingFactor = doc.bounds().height() / activeNode.bounds().height()
-                    newWidth = activeNode.bounds().width() * scalingFactor * self.curr_image_scale / 100
-                    newHeight = doc.bounds().height() * self.curr_image_scale / 100
+                    newWidth = activeNode.bounds().width() * scalingFactor * self.currImageScale / 100
+                    newHeight = doc.bounds().height() * self.currImageScale / 100
 
                     activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
             else:
-                newWidth = activeNode.bounds().width() * self.curr_image_scale / 100
-                newHeight = activeNode.bounds().height() * self.curr_image_scale / 100
+                newWidth = activeNode.bounds().width() * self.currImageScale / 100
+                newHeight = activeNode.bounds().height() * self.currImageScale / 100
 
                 activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
 

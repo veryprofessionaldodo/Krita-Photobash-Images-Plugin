@@ -15,10 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from krita import *
 from PyQt5 import QtWidgets, QtCore
-
 
 class Photobash_Display(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
@@ -28,8 +26,11 @@ class Photobash_Display(QWidget):
         super().__init__(parent)
         # QImage
         self.path = ""
-        self.qimage = QImage(self.path)
-        self.pixmap = QPixmap(50, 50).fromImage(self.qimage)
+        self.image = QImage(self.path)
+        self.pixmap = QPixmap(50, 50).fromImage(self.image)
+        self.painter = QPainter(self)
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        self.painter.setPen(QtCore.Qt.NoPen)
 
     def sizeHint(self):
         return QtCore.QSize(5000,5000)
@@ -52,9 +53,9 @@ class Photobash_Display(QWidget):
             mimedata = QMimeData()
             url = QUrl().fromLocalFile(self.path)
             mimedata.setUrls([url])
-            mimedata.setImageData(self.qimage)
+            mimedata.setImageData(self.image)
             # Clipboard
-            clipboard = QApplication.clipboard().setImage(self.qimage)
+            clipboard = QApplication.clipboard().setImage(self.image)
             # Drag
             drag = QDrag(self)
             drag.setMimeData(mimedata)
@@ -62,20 +63,17 @@ class Photobash_Display(QWidget):
             drag.setHotSpot(event.pos())
             drag.exec_(Qt.CopyAction | Qt.MoveAction)
 
-    def Input_Image(self, path, qimage):
+    def getImage(self, path, pixmap):
         self.path = path
-        self.qimage = qimage
-        self.pixmap = QPixmap(50, 50).fromImage(qimage)
+        self.image = QImage(path)
+        self.pixmap = QPixmap(path)
 
     def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        painter.setPen(QtCore.Qt.NoPen)
         # Calculations
         total_width = event.rect().width()
         total_height = event.rect().height()
-        image_width = self.qimage.width()
-        image_height = self.qimage.height()
+        image_width = self.image.width()
+        image_height = self.image.height()
         try:
             var_w = total_width / image_width
             var_h = total_height / image_height
@@ -94,14 +92,13 @@ class Photobash_Display(QWidget):
         offset_x = wt2 - (self.scaled_width * 0.5)
         offset_y = ht2 - (self.scaled_height * 0.5)
         # Save State for Painter
-        painter.save()
-        # QImag
-        image = self.qimage
-        painter.translate(offset_x, offset_y)
-        painter.scale(size, size)
-        painter.drawImage(0,0,image)
+        self.painter.save()
+        
+        self.painter.translate(offset_x, offset_y)
+        self.painter.scale(size, size)
+        self.painter.drawImage(0, 0, self.image)
         # Restore Space
-        painter.restore()
+        self.painter.restore()
 
 class Photobash_Button(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
@@ -118,10 +115,13 @@ class Photobash_Button(QWidget):
         self.number = None
         # QImage
         self.path = ""
-        self.qimage = QImage(self.path)
-        self.pixmap = QPixmap(50, 50).fromImage(self.qimage)
         self.scaled_width = 1
         self.scaled_height = 1
+
+        self.painter = QPainter(self)
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        self.painter.setPen(QtCore.Qt.NoPen)
+
     def sizeHint(self):
         return QtCore.QSize(2000,2000)
 
@@ -141,9 +141,9 @@ class Photobash_Button(QWidget):
             mimedata = QMimeData()
             url = QUrl().fromLocalFile(self.path)
             mimedata.setUrls([url])
-            mimedata.setImageData(self.qimage)
+            mimedata.setImageData(self.image)
             # Clipboard
-            clipboard = QApplication.clipboard().setImage(self.qimage)
+            clipboard = QApplication.clipboard().setImage(self.image)
             # Drag
             drag = QDrag(self)
             drag.setMimeData(mimedata)
@@ -168,19 +168,17 @@ class Photobash_Button(QWidget):
         if action == cmenu_bash:
             self.SIGNAL_BASH.emit(0)
 
-    def Input_Image(self, path, qimage):
+    def getImage(self, path):
         self.path = path
-        self.qimage = qimage
-        self.pixmap = QPixmap(50, 50).fromImage(qimage)
+        self.image = QImage(path)
+        self.pixmap = QPixmap(path)
+    
     def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        painter.setPen(QtCore.Qt.NoPen)
         # Calculations
         total_width = event.rect().width()
         total_height = event.rect().height()
-        image_width = self.qimage.width()
-        image_height = self.qimage.height()
+        image_width = self.image.width()
+        image_height = self.image.height()
         try:
             var_w = total_width / image_width
             var_h = total_height / image_height
@@ -199,11 +197,13 @@ class Photobash_Button(QWidget):
         offset_x = wt2 - (self.scaled_width * 0.5)
         offset_y = ht2 - (self.scaled_height * 0.5)
         # Save State for Painter
-        painter.save()
+        self.painter.save()
         # QImag
-        image = self.qimage
-        painter.translate(offset_x, offset_y)
-        painter.scale(size, size)
-        painter.drawImage(0,0,image)
+        image = self.image
+        self.painter.translate(offset_x, offset_y)
+        self.painter.scale(size, size)
+        self.painter.drawImage(0,0,image)
+        self.painter.drawPixmap(0, 0, self.pixmap)
+        self.painter.drawLine(0, 0, 100, 100)
         # Restore Space
-        painter.restore()
+        self.painter.restore()

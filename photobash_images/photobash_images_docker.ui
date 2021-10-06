@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>photobash</class>
- <widget class="QWidget" name="photobash">
+ <widget class="QWidget" name="photobashWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -325,7 +325,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="page">
+       <widget class="QLabel" name="paginationLabel">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -345,7 +345,7 @@
          </size>
         </property>
         <property name="text">
-         <string>10/10</string>
+         <string>0/0</string>
         </property>
        </widget>
       </item>
