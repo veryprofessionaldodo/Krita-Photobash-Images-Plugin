@@ -39,7 +39,7 @@ class PhotobashDocker(DockWidget):
         self.setupInterface()
         self.setupModules()
         self.setStyle()
-        self.settingsLoad()
+        self.initialize()
 
     def setupVariables(self):
         self.mainWidget = QWidget(self)
@@ -62,13 +62,12 @@ class PhotobashDocker(DockWidget):
         self.setWindowTitle("Photobash Images")
 
         # Path Name
-        self.directoryPlugin = str(
-            os.path.dirname(os.path.realpath(__file__)))
+        self.directoryPlugin = str(os.path.dirname(os.path.realpath(__file__)))
 
         # Photo Bash Docker
         self.window = QWidget()
-        self.layout = uic.loadUi(
-            self.directoryPlugin + '/photobash_images_docker.ui', self.window)
+
+        self.layout = uic.loadUi(self.directoryPlugin + '/photobash_images_docker.ui', self.window)
         self.setWidget(self.window)
 
         self.layoutButtons = [
@@ -84,13 +83,11 @@ class PhotobashDocker(DockWidget):
         ]
 
         # Adjust Layouts
-        self.layout.imageWidget.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Ignored)
-        self.layout.middleWidget.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
+        self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # setup connections for top elements
-        self.layout.filterTextEdit.textChanged.connect(self.updateTextFilter)
+        self.layout.filterTextEdit.textChanged.connect(self.filterImages)
         self.layout.changePathButton.clicked.connect(self.changePath)
         # setup connections for bottom elements
         self.layout.previousButton.clicked.connect(lambda: self.updateCurrentPage(-1))
@@ -112,12 +109,11 @@ class PhotobashDocker(DockWidget):
             imageButton = Photobash_Button(layoutButton)
             imageButton.setNumber(i)
 
-            # imageButton = layoutButton
             imageButton.SIGNAL_HOVER.connect(self.cursorHover)
             imageButton.SIGNAL_LMB.connect(lambda: self.buttonClick(i))
             # imageButton.SIGNAL_LMB.connect(self.PB_Set_Image)
-            imageButton.SIGNAL_WUP.connect(self.PB_Wheel_Up)
-            imageButton.SIGNAL_WDN.connect(self.PB_Wheel_Down)
+            imageButton.SIGNAL_WUP.connect(lambda: self.updateCurrentPage(-1))
+            imageButton.SIGNAL_WDN.connect(lambda: self.updateCurrentPage(1))
             imageButton.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
             imageButton.SIGNAL_BASH.connect(self.PB_Bash)
             imageButton.SIGNAL_DRAG.connect(self.PB_Drag)
@@ -127,9 +123,13 @@ class PhotobashDocker(DockWidget):
     def setStyle(self):
         self.cursorHover(None)
 
-    # executed whenever the text of the images filter is updated,
-    # selects the images that meet the criteria
-    def updateTextFilter(self):
+    def initialize(self):
+        # initialize based on what was setup
+        if self.directoryPath != "":
+            self.layout.changePathButton.setText("Change References Directory")
+            self.filterImages()
+
+    def filterImages(self):
         newImages = []
         self.currPage = 0
 
@@ -181,9 +181,6 @@ class PhotobashDocker(DockWidget):
 
     # //
     #\\ Independant Functions ##################################################
-    def clearFocus(self):
-        self.layout.filterTextEdit.clearFocus() 
-
     def cursorHover(self, SIGNAL_HOVER):
         # Reset Hover
         bg_alpha = str("background-color: rgba(0, 0, 0, 50); ")
@@ -221,7 +218,7 @@ class PhotobashDocker(DockWidget):
             if i < maxRange:
                 # image is within valid range, apply it
                 path = self.foundImages[i + buttonsSize * self.currPage]
-                # self.imagesButtons[i].getImage(path)
+
                 self.imagesButtons[i].setImage(path)
             else:
                 # is invalid image, reset
@@ -306,11 +303,6 @@ class PhotobashDocker(DockWidget):
                 except:
                     pass
 
-    def PB_Wheel_Up(self, SIGNAL_WUP):
-        QtCore.qDebug("Wheel Up")
-    def PB_Wheel_Down(self, SIGNAL_WDN):
-        QtCore.qDebug("Wheel Down")
-
     def PB_Display_Open(self):
         QtCore.qDebug("Single Open")
         self.imageWidget.getImage(path)
@@ -330,18 +322,7 @@ class PhotobashDocker(DockWidget):
     # //
     #\\ Events #################################################################
     def leaveEvent(self, event):
-        self.clearFocus()
-        self.settingSave()
-    def closeEvent(self, event):
-        self.settingSave()
-
-    # //
-    #\\ Settings ###############################################################
-    def settingsLoad(self):
-        pass
-
-    def settingSave(self):
-        pass
+        self.layout.filterTextEdit.clearFocus() 
 
     # //
     #\\ Canvas Changed #########################################################
@@ -401,7 +382,7 @@ class PhotobashDocker(DockWidget):
             Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
 
         self.layout.changePathButton.setText("Change References Directory")
-        self.updateTextFilter()
+        self.filterImages()
 
     def addImageLayer(self, photoPath):
         # Get the document:

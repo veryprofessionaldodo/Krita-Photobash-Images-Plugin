@@ -1,4 +1,3 @@
-# modulo
 # Photobash Images is a Krita plugin to get CC0 images based on a search,
 # straight from the Krita Interface. Useful for textures and concept art!
 # Copyright (C) 2020  Pedro Reis.
