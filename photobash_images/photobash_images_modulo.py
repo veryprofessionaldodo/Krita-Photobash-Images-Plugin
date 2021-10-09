@@ -19,22 +19,70 @@
 from krita import *
 from PyQt5 import QtWidgets, QtCore
 
+def customPaintEvent(instance, event):
+    painter = QPainter(instance)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+    painter.setPen(QtCore.Qt.NoPen)
+
+    # Calculations
+    total_width = event.rect().width()
+    total_height = event.rect().height()
+    image_width = instance.qimage.width()
+    image_height = instance.qimage.height()
+    
+    try:
+        var_w = total_width / image_width
+        var_h = total_height / image_height
+    except:
+        var_w = 1
+        var_h = 1
+    
+    size = 0
+    
+    if var_w <= var_h:
+        size = var_w
+    if var_w > var_h:
+        size = var_h
+    
+    wt2 = total_width * 0.5
+    ht2 = total_height * 0.5
+    
+    instance.scaled_width = image_width * size
+    instance.scaled_height = image_height * size
+    
+    offset_x = wt2 - (instance.scaled_width * 0.5)
+    offset_y = ht2 - (instance.scaled_height * 0.5)
+    
+    # Save State for Painter
+    painter.save()
+    painter.translate(offset_x, offset_y)
+    painter.scale(size, size)
+    painter.drawImage(0,0,instance.qimage)
+    
+    # Restore Space
+    painter.restore()
+
+def customSetImage(instance, path):
+    instance.path = path
+    instance.qimage = QImage(path)
+    instance.pixmap = QPixmap(50, 50).fromImage(instance.qimage)
+
+    instance.update()
+
 class Photobash_Display(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
     SIGNAL_CLOSE = QtCore.pyqtSignal(int)
 
     def __init__(self, parent):
         super(Photobash_Display, self).__init__(parent)
-        # QImage
-        self.path = ""
-        self.qimage = QImage(self.path)
-        self.pixmap = QPixmap(50, 50).fromImage(self.qimage)
-
+        customSetImage(self, "")
+        
     def sizeHint(self):
         return QtCore.QSize(5000,5000)
 
     def enterEvent(self, event):
         self.SIGNAL_HOVER.emit("D")
+    
     def leaveEvent(self, event):
         self.SIGNAL_HOVER.emit("None")
 
@@ -61,48 +109,11 @@ class Photobash_Display(QWidget):
             drag.setHotSpot(event.pos())
             drag.exec_(Qt.CopyAction | Qt.MoveAction)
 
-    def addImage(self, path):
-        self.path = path
-        self.qimage = QImage(path)
-        self.pixmap = QPixmap(50, 50).fromImage(self.qimage)
-
-        self.update()
+    def setImage(self, path):
+        customSetImage(self, path)
 
     def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        painter.setPen(QtCore.Qt.NoPen)
-        # Calculations
-        total_width = event.rect().width()
-        total_height = event.rect().height()
-        image_width = self.qimage.width()
-        image_height = self.qimage.height()
-        try:
-            var_w = total_width / image_width
-            var_h = total_height / image_height
-        except:
-            var_w = 1
-            var_h = 1
-        size = 0
-        if var_w <= var_h:
-            size = var_w
-        if var_w > var_h:
-            size = var_h
-        wt2 = total_width * 0.5
-        ht2 = total_height * 0.5
-        self.scaled_width = image_width * size
-        self.scaled_height = image_height * size
-        offset_x = wt2 - (self.scaled_width * 0.5)
-        offset_y = ht2 - (self.scaled_height * 0.5)
-        # Save State for Painter
-        painter.save()
-        image = self.qimage
-        painter.translate(offset_x, offset_y)
-        painter.scale(size, size)
-        painter.drawImage(0,0,image)
-        # Restore Space
-        painter.restore()
-
+        customPaintEvent(self, event)
 
 class Photobash_Button(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
@@ -116,21 +127,22 @@ class Photobash_Button(QWidget):
     def __init__(self, parent):
         super(Photobash_Button, self).__init__(parent)
         # Variables
-        self.number = None
+        self.number = -1
         # QImage
-        self.path = ""
-        self.qimage = QImage(self.path)
-        self.pixmap = QPixmap(50, 50).fromImage(self.qimage)
+        customSetImage(self, "")
+
         self.scaled_width = 1
         self.scaled_height = 1
 
+    def setNumber(self, number):
+        self.number = number 
+
     def sizeHint(self):
         return QtCore.QSize(2000,2000)
-
-    def Number(self, number):
-        self.number = number
+    
     def enterEvent(self, event):
         self.SIGNAL_HOVER.emit(str(self.number))
+
     def leaveEvent(self, event):
         self.SIGNAL_HOVER.emit("None")
 
@@ -175,45 +187,9 @@ class Photobash_Button(QWidget):
         if action == cmenu_bash:
             self.SIGNAL_BASH.emit(0)
 
-    def addImage(self, path):
-        self.path = path
-        self.qimage = QImage(path)
-        self.pixmap = QPixmap(50, 50).fromImage(self.qimage)
-
-        self.update()
+    def setImage(self, path):
+        customSetImage(self, path)
 
     def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        painter.setPen(QtCore.Qt.NoPen)
-        # Calculations
-        total_width = event.rect().width()
-        total_height = event.rect().height()
-        image_width = self.qimage.width()
-        image_height = self.qimage.height()
-        try:
-            var_w = total_width / image_width
-            var_h = total_height / image_height
-        except:
-            var_w = 1
-            var_h = 1
-        size = 0
-        if var_w <= var_h:
-            size = var_w
-        if var_w > var_h:
-            size = var_h
-        wt2 = total_width * 0.5
-        ht2 = total_height * 0.5
-        self.scaled_width = image_width * size
-        self.scaled_height = image_height * size
-        offset_x = wt2 - (self.scaled_width * 0.5)
-        offset_y = ht2 - (self.scaled_height * 0.5)
-        # Save State for Painter
-        painter.save()
-        # QImag
-        image = self.qimage
-        painter.translate(offset_x, offset_y)
-        painter.scale(size, size)
-        painter.drawImage(0,0,image)
-        # Restore Space
-        painter.restore()
+        customPaintEvent(self, event)
+        

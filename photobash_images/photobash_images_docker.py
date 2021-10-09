@@ -110,6 +110,8 @@ class PhotobashDocker(DockWidget):
             layoutButton = self.layoutButtons[i]
             
             imageButton = Photobash_Button(layoutButton)
+            imageButton.setNumber(i)
+
             # imageButton = layoutButton
             imageButton.SIGNAL_HOVER.connect(self.cursorHover)
             imageButton.SIGNAL_LMB.connect(lambda: self.buttonClick(i))
@@ -180,7 +182,7 @@ class PhotobashDocker(DockWidget):
     # //
     #\\ Independant Functions ##################################################
     def clearFocus(self):
-        self.layout.filterTextEdit.clearFocus()
+        self.layout.filterTextEdit.clearFocus() 
 
     def cursorHover(self, SIGNAL_HOVER):
         # Reset Hover
@@ -220,14 +222,7 @@ class PhotobashDocker(DockWidget):
                 # image is within valid range, apply it
                 path = self.foundImages[i + buttonsSize * self.currPage]
                 # self.imagesButtons[i].getImage(path)
-                self.imagesButtons[i].addImage(path)
-
-                #pixmap = QPixmap(self.foundImages[i])
-                # icon = QIcon(self.foundImages[i + buttonsSize * self.currPage])
-
-                # self.imagesButtons[i].setIcon(icon)
-                # self.imagesButtons[i].setIconSize(QSize(int(maxWidth), int(maxHeight)))
-
+                self.imagesButtons[i].setImage(path)
             else:
                 # is invalid image, reset
                 #self.imagesButtons[i].setIconSize(QSize(0,0))
