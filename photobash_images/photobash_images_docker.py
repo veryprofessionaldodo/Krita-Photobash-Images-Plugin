@@ -219,7 +219,8 @@ class PhotobashDocker(DockWidget):
             if i < maxRange:
                 # image is within valid range, apply it
                 path = self.foundImages[i + buttonsSize * self.currPage]
-                self.imagesButtons[i].getImage(path)
+                # self.imagesButtons[i].getImage(path)
+                self.imagesButtons[i].addImage(path)
 
                 #pixmap = QPixmap(self.foundImages[i])
                 # icon = QIcon(self.foundImages[i + buttonsSize * self.currPage])
