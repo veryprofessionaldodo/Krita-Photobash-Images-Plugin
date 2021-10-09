@@ -18,6 +18,7 @@
 
 #\\ Import Modules #############################################################
 from krita import *
+import copy
 import math
 from PyQt5 import QtWidgets, QtCore, uic
 from .photobash_images_modulo import (
@@ -47,14 +48,21 @@ class PhotobashDocker(DockWidget):
         self.applicationName = "Photobash"
         self.referencesSetting = "referencesDirectory"
         self.fitCanvasSetting = "fitToCanvas"
+        self.foundFavouritesSetting = "currentFavourites"
 
         self.currImageScale = 100
         self.fitCanvasChecked = bool(Application.readSetting(self.applicationName, self.fitCanvasSetting, "True"))
         self.imagesButtons = []
         self.foundImages = []
+        self.favouriteImages = []
 
         self.currPage = 0
         self.directoryPath = Application.readSetting(self.applicationName, self.referencesSetting, "")
+        favouriteImagesValues = Application.readSetting(self.applicationName, self.foundFavouritesSetting, "").split("'")
+        
+        for value in favouriteImagesValues:
+            if value != "[" and value != ", " and value != "]" and value != "":
+                self.favouriteImages.append(value)
 
     def setupInterface(self):
         # Window
@@ -98,7 +106,7 @@ class PhotobashDocker(DockWidget):
         # Display
         self.imageWidget = Photobash_Display(self.layout.imageWidget)
         self.imageWidget.SIGNAL_HOVER.connect(self.cursorHover)
-        self.imageWidget.SIGNAL_CLOSE.connect(self.PB_Display_Close)
+        self.imageWidget.SIGNAL_CLOSE.connect(self.closePreview)
 
         self.imagesButtons = []
         
@@ -112,9 +120,10 @@ class PhotobashDocker(DockWidget):
             imageButton.SIGNAL_LMB.connect(self.buttonClick)
             imageButton.SIGNAL_WUP.connect(lambda: self.updateCurrentPage(-1))
             imageButton.SIGNAL_WDN.connect(lambda: self.updateCurrentPage(1))
-            imageButton.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
-            imageButton.SIGNAL_BASH.connect(self.PB_Bash)
-            imageButton.SIGNAL_DRAG.connect(self.PB_Drag)
+            imageButton.SIGNAL_PREVIEW.connect(self.openPreview)
+            imageButton.SIGNAL_FAVOURITE.connect(self.pinToFavourites)
+            imageButton.SIGNAL_OPEN_NEW.connect(self.openNewDocument)
+            #imageButton.SIGNAL_DRAG.connect(self.PB_Drag)
 
             self.imagesButtons.append(imageButton)
 
@@ -128,6 +137,15 @@ class PhotobashDocker(DockWidget):
             self.filterImages()
             self.layout.fitCanvasCheckBox.setChecked(self.fitCanvasChecked)
 
+        # initiali organization of images
+        bufferImages = copy.deepcopy(self.favouriteImages)
+        for i in range(0, len(self.foundImages)):
+            if not self.foundImages[i] in bufferImages:
+                bufferImages.append(self.foundImages[i])
+
+        self.foundImages = bufferImages
+        self.updateImages()
+
     def filterImages(self):
         newImages = []
         self.currPage = 0
@@ -139,7 +157,9 @@ class PhotobashDocker(DockWidget):
                 stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
 
                 for word in stringsInText:
-                    if word in it.filePath().lower() and (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()):
+                    if word in it.filePath().lower() and \
+                        (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
+                        (not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
                         newImages.append(it.filePath())
 
                 it.next()
@@ -155,8 +175,6 @@ class PhotobashDocker(DockWidget):
                         self.updateImages()
                         return
 
-    # //
-    #\\ Bottom Functions #######################################################
     def updateCurrentPage(self, increment):
         if (self.currPage == 0 and increment == -1) or \
             ((self.currPage + 1) * len(self.imagesButtons) > len(self.foundImages) and increment == 1) or \
@@ -178,8 +196,6 @@ class PhotobashDocker(DockWidget):
             self.fitCanvasChecked = False
             Application.writeSetting(self.applicationName, self.fitCanvasSetting, "false")
 
-    # //
-    #\\ Independant Functions ##################################################
     def cursorHover(self, SIGNAL_HOVER):
         # Reset Hover
         bg_alpha = str("background-color: rgba(0, 0, 0, 50); ")
@@ -197,7 +213,7 @@ class PhotobashDocker(DockWidget):
                 
             if SIGNAL_HOVER == str(i):
                 self.layoutButtons[i].setStyleSheet(bg_hover)
-        
+    
     def updateImages(self):
         maxWidth = 0
         maxHeight = 0
@@ -283,87 +299,36 @@ class PhotobashDocker(DockWidget):
 
             Krita.instance().activeDocument().refreshProjection()
 
-    def Open_Document(Self, path):
+    def openNewDocument(self, path):
         document = Krita.instance().openDocument(path)
         Application.activeWindow().addView(document)
 
-    # //
-    #\\ Signals ################################################################
-    def PB_Set_Image(self, SIGNAL_LMB):
-        QtCore.qDebug("Image Set")
-        if ((self.canvas() is not None) and (self.canvas().view() is not None)):
-            pass
-        else:
-            path = "C:\\Users\\EyeOd\\Desktop\\pink.jpg"
-            if path != "":
-                try:
-                    QtCore.qWarning("Photobash Images - No Document Active > Openning Document")
-                    self.Open_Document(path)
-                except:
-                    pass
-
-    def PB_Display_Open(self):
-        QtCore.qDebug("Single Open")
-        self.imageWidget.getImage(path)
+    def openPreview(self, path):
+        self.imageWidget.setImage(path)
         self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
-    def PB_Display_Close(self):
-        QtCore.qDebug("Single Close")
+
+    def closePreview(self):
         self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-    def PB_Bash(self):
-        QtCore.qDebug("Bash")
+    def pinToFavourites(self, path):
+        self.currPage = 0
+        if path in self.favouriteImages:
+            self.favouriteImages.remove(path)
+        self.favouriteImages = [path] + self.favouriteImages
 
-    def PB_Drag(self):
-        QtCore.qDebug("Drag")
+        self.foundImages.remove(path)
+        self.foundImages = [path] + self.foundImages
+        
+        Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
+        self.updateImages()
 
-    # //
-    #\\ Events #################################################################
     def leaveEvent(self, event):
         self.layout.filterTextEdit.clearFocus() 
 
-    # //
-    #\\ Canvas Changed #########################################################
     def canvasChanged(self, canvas):
         pass
-
-    # //
-    #\\ Notes ##################################################################
-    """
-    Variables
-    Many variables are presented as "var = 0" but then inside the code are reset to "self.var=0" before anything happens it is better to just have them cunstructed with self right away and not worry with a useless variable name.
-    I was integrating them inside "def Variables" but I got stuck inside the directory iterator and what it all meant since i never made one before and I dont want to destroy the acctual code.
-    Only issues is some  variables names to make it work since they changed considering how I built the UI.
-
-    Initialize
-    Source connects to original cycle, Can be deleted after integrated
-    Construct connects to new cycle
-
-    def Connect is commented out fllow the trail from here to see what needs to be added
-
-    Top Functions
-    Top buttons Triggers
-
-    Bottom Functions
-    Bottom buttons triggers
-
-    Signals
-    signals that arrive from the modules and trigger something
-
-    Accessing UI element
-    self.layout.images_buttons0
-
-    Accessing button Module
-    self.imagesButtons0
-
-    sending files to Painter
-    path = string with full file path on hardrive
-    qimage = QImage(path)
-    self.imagesButtons0.getImage(path, qimage)
-    """
-    # //
-    #\\ Source ###########################################################################################################
 
     def buttonClick(self, position):
         if position < len(self.foundImages) - len(self.imagesButtons) * self.currPage:
@@ -380,9 +345,13 @@ class PhotobashDocker(DockWidget):
             self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", self.directoryPath)
             Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
 
+        self.favouriteImages = []
+        Application.writeSetting(self.applicationName, self.foundFavouritesSetting, "")
+
         self.layout.changePathButton.setText("Change References Directory")
         self.filterImages()
 
+    # add the specified image to the document
     def addImageLayer(self, photoPath):
         # Get the document:
         doc = Krita.instance().activeDocument()
@@ -431,5 +400,3 @@ class PhotobashDocker(DockWidget):
             activeNode.move(int(offsetX), int(offsetY))
 
             Krita.instance().activeDocument().refreshProjection()
-
-    # //

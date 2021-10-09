@@ -68,6 +68,22 @@ def customSetImage(instance, path):
 
     instance.update()
 
+def customMouseMoveEvent(self, event):
+    if (event.modifiers() == QtCore.Qt.ShiftModifier or event.modifiers() == QtCore.Qt.ControlModifier or event.modifiers() == QtCore.Qt.AltModifier):
+        # MimeData
+        mimedata = QMimeData()
+        url = QUrl().fromLocalFile(self.path)
+        mimedata.setUrls([url])
+        mimedata.setImageData(self.qimage)
+        # Clipboard
+        clipboard = QApplication.clipboard().setImage(self.qimage)
+        # Drag
+        drag = QDrag(self)
+        drag.setMimeData(mimedata)
+        drag.setPixmap(self.pixmap)
+        drag.setHotSpot(event.pos())
+        drag.exec_(Qt.CopyAction | Qt.MoveAction)
+
 class Photobash_Display(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
     SIGNAL_CLOSE = QtCore.pyqtSignal(int)
@@ -86,27 +102,10 @@ class Photobash_Display(QWidget):
         self.SIGNAL_HOVER.emit("None")
 
     def mousePressEvent(self, event):
-        if (event.modifiers() == QtCore.Qt.ShiftModifier or event.modifiers() == QtCore.Qt.ControlModifier or event.modifiers() == QtCore.Qt.AltModifier):
-            self.SIGNAL_CLOSE.emit(0)
-
-    def mouseDoubleClickEvent(self, event):
         self.SIGNAL_CLOSE.emit(0)
 
     def mouseMoveEvent(self, event):
-        if (event.modifiers() == QtCore.Qt.ShiftModifier or event.modifiers() == QtCore.Qt.ControlModifier or event.modifiers() == QtCore.Qt.AltModifier):
-            # MimeData
-            mimedata = QMimeData()
-            url = QUrl().fromLocalFile(self.path)
-            mimedata.setUrls([url])
-            mimedata.setImageData(self.qimage)
-            # Clipboard
-            clipboard = QApplication.clipboard().setImage(self.qimage)
-            # Drag
-            drag = QDrag(self)
-            drag.setMimeData(mimedata)
-            drag.setPixmap(self.pixmap)
-            drag.setHotSpot(event.pos())
-            drag.exec_(Qt.CopyAction | Qt.MoveAction)
+        customMouseMoveEvent(self, event)
 
     def setImage(self, path):
         customSetImage(self, path)
@@ -119,8 +118,9 @@ class Photobash_Button(QWidget):
     SIGNAL_LMB = QtCore.pyqtSignal(int)
     SIGNAL_WUP = QtCore.pyqtSignal(int)
     SIGNAL_WDN = QtCore.pyqtSignal(int)
-    SIGNAL_DISPLAY = QtCore.pyqtSignal(int)
-    SIGNAL_BASH = QtCore.pyqtSignal(int)
+    SIGNAL_PREVIEW = QtCore.pyqtSignal(str)
+    SIGNAL_FAVOURITE = QtCore.pyqtSignal(str)
+    SIGNAL_OPEN_NEW = QtCore.pyqtSignal(str)
     SIGNAL_DRAG = QtCore.pyqtSignal(int)
 
     def __init__(self, parent):
@@ -154,37 +154,29 @@ class Photobash_Button(QWidget):
         pass
 
     def mouseMoveEvent(self, event):
-        if (event.modifiers() == QtCore.Qt.ShiftModifier or event.modifiers() == QtCore.Qt.ControlModifier or event.modifiers() == QtCore.Qt.AltModifier):
-            # MimeData
-            mimedata = QMimeData()
-            url = QUrl().fromLocalFile(self.path)
-            mimedata.setUrls([url])
-            mimedata.setImageData(self.qimage)
-            # Clipboard
-            clipboard = QApplication.clipboard().setImage(self.qimage)
-            # Drag
-            drag = QDrag(self)
-            drag.setMimeData(mimedata)
-            drag.setPixmap(self.pixmap)
-            drag.setHotSpot(event.pos())
-            drag.exec_(Qt.CopyAction | Qt.MoveAction)
+        customMouseMoveEvent(self, event)
 
     def wheelEvent(self,event):
         delta = event.angleDelta()
-        if delta.y() > 60:
+        if delta.y() > 20:
             self.SIGNAL_WUP.emit(0)
-        elif delta.y() < -60:
+        elif delta.y() < -20:
             self.SIGNAL_WDN.emit(0)
 
-    def contextMenuEvent(self, event): # Right Click
+    # menu opened with right click
+    def contextMenuEvent(self, event): 
         cmenu = QMenu(self)
-        cmenu_display = cmenu.addAction("Display")
-        cmenu_bash = cmenu.addAction("Bash")
+        cmenuDisplay = cmenu.addAction("Preview In Docker")
+        cmenuFavourite = cmenu.addAction("Pin To Beginning")
+        cmenuOpenNew = cmenu.addAction("Open as New Document")
+
         action = cmenu.exec_(self.mapToGlobal(event.pos()))
-        if action == cmenu_display:
-            self.SIGNAL_DISPLAY.emit(0)
-        if action == cmenu_bash:
-            self.SIGNAL_BASH.emit(0)
+        if action == cmenuDisplay:
+            self.SIGNAL_PREVIEW.emit(self.path)
+        if action == cmenuFavourite:
+            self.SIGNAL_FAVOURITE.emit(self.path)
+        if action == cmenuOpenNew:
+            self.SIGNAL_OPEN_NEW.emit(self.path)
 
     def setImage(self, path):
         customSetImage(self, path)
