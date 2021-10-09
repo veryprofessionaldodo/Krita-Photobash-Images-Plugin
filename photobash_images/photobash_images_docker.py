@@ -49,8 +49,7 @@ class PhotobashDocker(DockWidget):
         self.fitCanvasSetting = "fitToCanvas"
 
         self.currImageScale = 100
-        self.fitCanvasChecked = True
-
+        self.fitCanvasChecked = bool(Application.readSetting(self.applicationName, self.fitCanvasSetting, "True"))
         self.imagesButtons = []
         self.foundImages = []
 
@@ -110,8 +109,7 @@ class PhotobashDocker(DockWidget):
             imageButton.setNumber(i)
 
             imageButton.SIGNAL_HOVER.connect(self.cursorHover)
-            imageButton.SIGNAL_LMB.connect(lambda: self.buttonClick(i))
-            # imageButton.SIGNAL_LMB.connect(self.PB_Set_Image)
+            imageButton.SIGNAL_LMB.connect(self.buttonClick)
             imageButton.SIGNAL_WUP.connect(lambda: self.updateCurrentPage(-1))
             imageButton.SIGNAL_WDN.connect(lambda: self.updateCurrentPage(1))
             imageButton.SIGNAL_DISPLAY.connect(self.PB_Display_Open)
@@ -128,6 +126,7 @@ class PhotobashDocker(DockWidget):
         if self.directoryPath != "":
             self.layout.changePathButton.setText("Change References Directory")
             self.filterImages()
+            self.layout.fitCanvasCheckBox.setChecked(self.fitCanvasChecked)
 
     def filterImages(self):
         newImages = []
@@ -418,7 +417,7 @@ class PhotobashDocker(DockWidget):
                     newWidth = activeNode.bounds().width() * scalingFactor * self.currImageScale / 100
                     newHeight = doc.bounds().height() * self.currImageScale / 100
 
-                    activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
+                activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
             else:
                 newWidth = activeNode.bounds().width() * self.currImageScale / 100
                 newHeight = activeNode.bounds().height() * self.currImageScale / 100

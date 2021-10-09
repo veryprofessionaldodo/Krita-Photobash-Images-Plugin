@@ -445,7 +445,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Fit Canvas</string>
+         <string>Fit To Canvas</string>
         </property>
        </widget>
       </item>
