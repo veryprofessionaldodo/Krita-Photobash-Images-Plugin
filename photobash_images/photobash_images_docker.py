@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#\\ Import Modules #############################################################
 from krita import *
 import copy
 import math
@@ -26,12 +25,8 @@ from .photobash_images_modulo import (
     Photobash_Button,
 )
 
-# //
-#\\ Global Variables ###########################################################
-# //
-
 class PhotobashDocker(DockWidget):
-    #\\ Initialize #############################################################
+
     def __init__(self):
         super().__init__()
 
@@ -59,7 +54,7 @@ class PhotobashDocker(DockWidget):
         self.currPage = 0
         self.directoryPath = Application.readSetting(self.applicationName, self.referencesSetting, "")
         favouriteImagesValues = Application.readSetting(self.applicationName, self.foundFavouritesSetting, "").split("'")
-        
+
         for value in favouriteImagesValues:
             if value != "[" and value != ", " and value != "]" and value != "":
                 self.favouriteImages.append(value)
@@ -109,10 +104,10 @@ class PhotobashDocker(DockWidget):
         self.imageWidget.SIGNAL_CLOSE.connect(self.closePreview)
 
         self.imagesButtons = []
-        
+
         for i in range(0, len(self.layoutButtons)):
             layoutButton = self.layoutButtons[i]
-            
+
             imageButton = Photobash_Button(layoutButton)
             imageButton.setNumber(i)
 
@@ -123,6 +118,7 @@ class PhotobashDocker(DockWidget):
             imageButton.SIGNAL_PREVIEW.connect(self.openPreview)
             imageButton.SIGNAL_FAVOURITE.connect(self.pinToFavourites)
             imageButton.SIGNAL_OPEN_NEW.connect(self.openNewDocument)
+            imageButton.SIGNAL_REFERENCE.connect(self.placeReference)
             #imageButton.SIGNAL_DRAG.connect(self.PB_Drag)
 
             self.imagesButtons.append(imageButton)
@@ -186,7 +182,7 @@ class PhotobashDocker(DockWidget):
 
     def updateScale(self, value):
         self.currImageScale = value
-        self.layout.sliderLabel.setText(f"Image Scale : {self.currImageScale}%")  
+        self.layout.sliderLabel.setText(f"Image Scale : {self.currImageScale}%")
 
     def changedFitCanvas(self, state):
         if state == Qt.Checked:
@@ -206,14 +202,14 @@ class PhotobashDocker(DockWidget):
         self.layout.imageWidget.setStyleSheet(bg_alpha)
         if SIGNAL_HOVER == "D":
             self.layout.imageWidget.setStyleSheet(bg_hover)
-        
+
         # normal images
         for i in range(0, len(self.layoutButtons)):
             self.layoutButtons[i].setStyleSheet(bg_alpha)
-                
+
             if SIGNAL_HOVER == str(i):
                 self.layoutButtons[i].setStyleSheet(bg_hover)
-    
+
     def updateImages(self):
         maxWidth = 0
         maxHeight = 0
@@ -236,17 +232,16 @@ class PhotobashDocker(DockWidget):
 
                 self.imagesButtons[i].setImage(path)
             else:
-                # is invalid image, reset
-                #self.imagesButtons[i].setIconSize(QSize(0,0))
-                pass
+                # image is outside the range
+                self.imagesButtons[i].setImage("")
 
         # update text for pagination
         maxNumPage = math.ceil(len(self.foundImages) / len(self.layoutButtons))
         currPage = self.currPage + 1
-         
-        if maxNumPage == 0: 
+
+        if maxNumPage == 0:
             currPage = 0
-        # currPage is the index, but we want to present it in a user friendly way, 
+        # currPage is the index, but we want to present it in a user friendly way,
         # so it starts at 1
         self.layout.paginationLabel.setText(f"{str(currPage)}/{str(maxNumPage)}")
 
@@ -255,53 +250,48 @@ class PhotobashDocker(DockWidget):
         doc = Krita.instance().activeDocument()
 
         # Saving a non-existent document causes crashes, so lets check for that first.
-        if doc is not None:
-            root = doc.activeNode().parentNode();
+        if doc is None:
+            return 
 
-            layerName = photoPath.split("/")[len(photoPath.split("/")) - 1].split(".png")[0].split(".jpg")[0].split(".jpeg")[0]
+        # Check if there is a valid Canvas to place the Image
+        if self.canvas() is None or self.canvas().view() is None:
+            return 
 
-            tmpLayer = doc.createNode(layerName, "paintLayer")
-            newLayer = doc.createFileLayer(layerName, photoPath, "ImageToPPI")
+        scale = self.currImageScale / 100
 
-            root.addChildNode(newLayer, None)
-            root.addChildNode(tmpLayer, None)
+        # Scale Image
+        if self.fitCanvasChecked:
+            image = QImage(photoPath).scaled(doc.width() * scale, doc.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        else:
+            image = QImage(photoPath).scaled(self.width() * scale, self.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
-            doc.activeNode().mergeDown()
+        # MimeData
+        mimedata = QMimeData()
+        url = QUrl().fromLocalFile(photoPath)
+        mimedata.setUrls([url])
+        mimedata.setImageData(image)
 
-            activeNode = None
+        # Set image in clipboard
+        QApplication.clipboard().setImage(image)
 
-            for node in root.childNodes():
-                if node.name() == layerName:
-                    activeNode = node
-
-            if self.fitCanvasChecked:
-                if activeNode.bounds().width() / activeNode.bounds().height() > doc.bounds().width() / doc.bounds().height():
-                    scalingFactor = doc.bounds().width() / activeNode.bounds().width()
-                    newWidth = doc.bounds().width() * self.currImageScale / 100
-                    newHeight = activeNode.bounds().height() * scalingFactor * self.currImageScale / 100
-                else:
-                    scalingFactor = doc.bounds().height() / activeNode.bounds().height()
-                    newWidth = activeNode.bounds().width() * scalingFactor * self.currImageScale / 100
-                    newHeight = doc.bounds().height() * self.currImageScale / 100
-
-                    activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
-            else:
-                newWidth = activeNode.bounds().width() * self.currImageScale / 100
-                newHeight = activeNode.bounds().height() * self.currImageScale / 100
-
-                activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
-
-            # Center image
-            offsetX = doc.bounds().width()/2 - activeNode.bounds().center().x()
-            offsetY = doc.bounds().height()/2 - activeNode.bounds().center().y()
-
-            activeNode.move(int(offsetX), int(offsetY))
-
-            Krita.instance().activeDocument().refreshProjection()
+        # Place Image and Refresh Canvas
+        Krita.instance().action('edit_paste').trigger()
+        Krita.instance().activeDocument().refreshProjection()
 
     def openNewDocument(self, path):
         document = Krita.instance().openDocument(path)
         Application.activeWindow().addView(document)
+
+    def placeReference(self, SIGNAL_REFERENCE):
+        # MimeData
+        mimedata = QMimeData()
+        url = QUrl().fromLocalFile(SIGNAL_REFERENCE)
+        mimedata.setUrls([url])
+        image = QImage(SIGNAL_REFERENCE)
+        mimedata.setImageData(image)
+        
+        QApplication.clipboard().setImage(image)
+        Krita.instance().action('paste_as_reference').trigger()
 
     def openPreview(self, path):
         self.imageWidget.setImage(path)
@@ -320,12 +310,12 @@ class PhotobashDocker(DockWidget):
 
         self.foundImages.remove(path)
         self.foundImages = [path] + self.foundImages
-        
+
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
         self.updateImages()
 
     def leaveEvent(self, event):
-        self.layout.filterTextEdit.clearFocus() 
+        self.layout.filterTextEdit.clearFocus()
 
     def canvasChanged(self, canvas):
         pass
@@ -350,53 +340,3 @@ class PhotobashDocker(DockWidget):
 
         self.layout.changePathButton.setText("Change References Directory")
         self.filterImages()
-
-    # add the specified image to the document
-    def addImageLayer(self, photoPath):
-        # Get the document:
-        doc = Krita.instance().activeDocument()
-
-        # Saving a non-existent document causes crashes, so lets check for that first.
-        if doc is not None:
-            root = doc.activeNode().parentNode();
-
-            layerName = photoPath.split("/")[len(photoPath.split("/")) - 1].split(".png")[0].split(".jpg")[0].split(".jpeg")[0]
-
-            tmpLayer = doc.createNode(layerName, "paintLayer")
-            newLayer = doc.createFileLayer(layerName, photoPath, "ImageToPPI")
-
-            root.addChildNode(newLayer, None)
-            root.addChildNode(tmpLayer, None)
-
-            doc.activeNode().mergeDown()
-
-            activeNode = None
-
-            for node in root.childNodes():
-                if node.name() == layerName:
-                    activeNode = node
-
-            if self.fitCanvasChecked:
-                if activeNode.bounds().width() / activeNode.bounds().height() > doc.bounds().width() / doc.bounds().height():
-                    scalingFactor = doc.bounds().width() / activeNode.bounds().width()
-                    newWidth = doc.bounds().width() * self.currImageScale / 100
-                    newHeight = activeNode.bounds().height() * scalingFactor * self.currImageScale / 100
-                else:
-                    scalingFactor = doc.bounds().height() / activeNode.bounds().height()
-                    newWidth = activeNode.bounds().width() * scalingFactor * self.currImageScale / 100
-                    newHeight = doc.bounds().height() * self.currImageScale / 100
-
-                activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
-            else:
-                newWidth = activeNode.bounds().width() * self.currImageScale / 100
-                newHeight = activeNode.bounds().height() * self.currImageScale / 100
-
-                activeNode.scaleNode(QPoint(activeNode.bounds().center().x(),activeNode.bounds().center().y()), int(newWidth), int(newHeight), "Bicubic")
-
-            # Center image
-            offsetX = doc.bounds().width()/2 - activeNode.bounds().center().x()
-            offsetY = doc.bounds().height()/2 - activeNode.bounds().center().y()
-
-            activeNode.move(int(offsetX), int(offsetY))
-
-            Krita.instance().activeDocument().refreshProjection()
