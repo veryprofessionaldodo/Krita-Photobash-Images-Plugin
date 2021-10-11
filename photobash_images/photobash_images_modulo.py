@@ -81,6 +81,8 @@ def customMouseMoveEvent(self, event):
     # Clipboard
     QApplication.clipboard().setImage(self.qimage)
 
+    print("self.pixmap", self.pixmap)
+
     # Drag
     drag = QDrag(self)
     drag.setMimeData(mimedata)
