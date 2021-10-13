@@ -81,14 +81,12 @@ def customMouseMoveEvent(self, event):
     # Clipboard
     QApplication.clipboard().setImage(self.qimage)
 
-    print("self.pixmap", self.pixmap)
-
     # Drag
     drag = QDrag(self)
     drag.setMimeData(mimedata)
     drag.setPixmap(self.pixmap)
     drag.setHotSpot(event.pos())
-    drag.exec_(Qt.MoveAction)
+    drag.exec_(Qt.CopyAction)
 
 class Photobash_Display(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)

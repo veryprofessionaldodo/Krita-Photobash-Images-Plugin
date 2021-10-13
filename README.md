@@ -8,8 +8,9 @@ A simple Krita Plugin that lists the images you have on a folder you specify, wi
 - To add an image to the document simply click on them! Control their scale with the Slider, and fit it to the canvas. If the slider is at 100%, without fitting to canvas, the image will be added with it's full resolution. If fitting is enabled, it will be scaled to match the width or height of the document, depending on the aspect ratio of both the image and the document. When you try it, you'll see that it's pretty easy to understand :)  
 - Filter your images based on what you text on the search field. You can even use multiple words like "rocks marble", and it will show all images that have rock OR marble in the name! 
 - Right-click on any image to access a quick pop-up menu. There you can preview the image in the docker, open as a new document, or even pin to beginning of the list. This last feature remembers your favourites, even after you close Krita! As long as you don't change the base directory for the references, it will always remember your favourites, and place them in the correct order you specified. This is especially useful when you have dozens of images, but really use a small number of them all the time.
+- You can also add an image as a reference using the quick menu. If you want to delete a reference later, you need to press the "Pushpin Icon" on your toolbox, and remove it there.
 - Change the page by clicking on the arrow keys in the bottom tray, or for extra productivity, scroll using the middle-mouse wheel. If you're using a stylus, you can do "ALT" + Click and Drag to scroll through the pages. 
-- Drag an image to the canvas using "CTRL" + Drag, or "SHIFT" + Drag. It respects the scale properties you specified and is placed where you finished dragging! 
+- Drag an image to the canvas using "SHIFT" + Drag. It's a Qt shorcut, so it's going to add the image in it's original size, but a fix is being worked on! 
 
 # Installation
 

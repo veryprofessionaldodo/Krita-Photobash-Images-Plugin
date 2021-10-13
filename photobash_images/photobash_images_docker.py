@@ -59,6 +59,9 @@ class PhotobashDocker(DockWidget):
             if value != "[" and value != ", " and value != "]" and value != "":
                 self.favouriteImages.append(value)
 
+        self.bg_alpha = str("background-color: rgba(0, 0, 0, 50); ")
+        self.bg_hover = str("background-color: rgba(0, 0, 0, 100); ")
+
     def setupInterface(self):
         # Window
         self.setWindowTitle("Photobash Images")
@@ -98,19 +101,16 @@ class PhotobashDocker(DockWidget):
         self.layout.fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
 
     def setupModules(self):
-        # Display
+        # Display Single
         self.imageWidget = Photobash_Display(self.layout.imageWidget)
         self.imageWidget.SIGNAL_HOVER.connect(self.cursorHover)
         self.imageWidget.SIGNAL_CLOSE.connect(self.closePreview)
-
+        # Display Grid
         self.imagesButtons = []
-
         for i in range(0, len(self.layoutButtons)):
             layoutButton = self.layoutButtons[i]
-
             imageButton = Photobash_Button(layoutButton)
             imageButton.setNumber(i)
-
             imageButton.SIGNAL_HOVER.connect(self.cursorHover)
             imageButton.SIGNAL_LMB.connect(self.buttonClick)
             imageButton.SIGNAL_WUP.connect(lambda: self.updateCurrentPage(-1))
@@ -119,17 +119,16 @@ class PhotobashDocker(DockWidget):
             imageButton.SIGNAL_FAVOURITE.connect(self.pinToFavourites)
             imageButton.SIGNAL_OPEN_NEW.connect(self.openNewDocument)
             imageButton.SIGNAL_REFERENCE.connect(self.placeReference)
-            #imageButton.SIGNAL_DRAG.connect(self.PB_Drag)
-
             self.imagesButtons.append(imageButton)
 
     def setStyle(self):
+        # Displays
         self.cursorHover(None)
 
     def initialize(self):
         # initialize based on what was setup
         if self.directoryPath != "":
-            self.layout.changePathButton.setText("Change References Directory")
+            self.layout.changePathButton.setText("Change References Folder")
             self.filterImages()
             self.layout.fitCanvasCheckBox.setChecked(self.fitCanvasChecked)
 
@@ -140,6 +139,8 @@ class PhotobashDocker(DockWidget):
                 bufferImages.append(self.foundImages[i])
 
         self.foundImages = bufferImages
+        self.layout.sliderLabel.setText(f"Image Scale : 100%")
+
         self.updateImages()
 
     def filterImages(self):
@@ -193,34 +194,20 @@ class PhotobashDocker(DockWidget):
             Application.writeSetting(self.applicationName, self.fitCanvasSetting, "false")
 
     def cursorHover(self, SIGNAL_HOVER):
-        # Reset Hover
-        bg_alpha = str("background-color: rgba(0, 0, 0, 50); ")
-        # Hover Over
-        bg_hover = str("background-color: rgba(0, 0, 0, 100); ")
-
         # Display Image
-        self.layout.imageWidget.setStyleSheet(bg_alpha)
+        self.layout.imageWidget.setStyleSheet(self.bg_alpha)
         if SIGNAL_HOVER == "D":
-            self.layout.imageWidget.setStyleSheet(bg_hover)
+            self.layout.imageWidget.setStyleSheet(self.bg_hover)
 
         # normal images
         for i in range(0, len(self.layoutButtons)):
-            self.layoutButtons[i].setStyleSheet(bg_alpha)
+            self.layoutButtons[i].setStyleSheet(self.bg_alpha)
 
             if SIGNAL_HOVER == str(i):
-                self.layoutButtons[i].setStyleSheet(bg_hover)
+                self.layoutButtons[i].setStyleSheet(self.bg_hover)
 
     def updateImages(self):
-        maxWidth = 0
-        maxHeight = 0
-
         buttonsSize = len(self.imagesButtons)
-
-        for i in range(0, buttonsSize):
-            if maxWidth < self.imagesButtons[i].width():
-                maxWidth = self.imagesButtons[i].width()
-            if maxHeight < self.imagesButtons[i].height():
-                maxHeight = self.imagesButtons[i].height()
 
         # don't try to access image that isn't there
         maxRange = min(len(self.foundImages) - self.currPage * buttonsSize, buttonsSize)
@@ -229,7 +216,6 @@ class PhotobashDocker(DockWidget):
             if i < maxRange:
                 # image is within valid range, apply it
                 path = self.foundImages[i + buttonsSize * self.currPage]
-
                 self.imagesButtons[i].setImage(path)
             else:
                 # image is outside the range
@@ -289,7 +275,7 @@ class PhotobashDocker(DockWidget):
         mimedata.setUrls([url])
         image = QImage(SIGNAL_REFERENCE)
         mimedata.setImageData(image)
-        
+
         QApplication.clipboard().setImage(image)
         Krita.instance().action('paste_as_reference').trigger()
 
@@ -338,5 +324,5 @@ class PhotobashDocker(DockWidget):
         self.favouriteImages = []
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, "")
 
-        self.layout.changePathButton.setText("Change References Directory")
+        self.layout.changePathButton.setText("Change References Folder")
         self.filterImages()
