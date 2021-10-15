@@ -50,6 +50,11 @@ class PhotobashDocker(DockWidget):
         self.imagesButtons = []
         self.foundImages = []
         self.favouriteImages = []
+        # maps path to image
+        self.cachedImages = {}
+        # store order of push
+        self.cachedPathImages = []
+        self.maxCachedImages = 90
 
         self.currPage = 0
         self.directoryPath = Application.readSetting(self.applicationName, self.referencesSetting, "")
@@ -206,6 +211,21 @@ class PhotobashDocker(DockWidget):
             if SIGNAL_HOVER == str(i):
                 self.layoutButtons[i].setStyleSheet(self.bg_hover)
 
+    # checks if image is cached, and if it isn't, create it and cache it
+    def getImage(self, path):
+        if path in self.cachedPathImages:
+            return self.cachedImages[path]
+
+        # need to remove from cache
+        if len(self.cachedImages) > self.maxCachedImages: 
+            removedPath = self.cachedPathImages.pop()
+            self.cachedImages.pop(removedPath)
+
+        self.cachedPathImages = [path] + self.cachedPathImages
+        self.cachedImages[path] = QImage(path).scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        return self.cachedImages[path]
+
     def updateImages(self):
         buttonsSize = len(self.imagesButtons)
 
@@ -216,10 +236,10 @@ class PhotobashDocker(DockWidget):
             if i < maxRange:
                 # image is within valid range, apply it
                 path = self.foundImages[i + buttonsSize * self.currPage]
-                self.imagesButtons[i].setImage(path)
+                self.imagesButtons[i].setImage(path, self.getImage(path))
             else:
                 # image is outside the range
-                self.imagesButtons[i].setImage("")
+                self.imagesButtons[i].setImage("",None)
 
         # update text for pagination
         maxNumPage = math.ceil(len(self.foundImages) / len(self.layoutButtons))
@@ -280,7 +300,7 @@ class PhotobashDocker(DockWidget):
         Krita.instance().action('paste_as_reference').trigger()
 
     def openPreview(self, path):
-        self.imageWidget.setImage(path)
+        self.imageWidget.setImage(path, self.getImage(path))
         self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
 

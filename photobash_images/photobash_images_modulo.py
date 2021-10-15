@@ -18,6 +18,8 @@
 from krita import *
 from PyQt5 import QtWidgets, QtCore
 
+DRAG_DELTA = 30
+
 def customPaintEvent(instance, event):
     painter = QPainter(instance)
     painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
@@ -61,15 +63,28 @@ def customPaintEvent(instance, event):
     # Restore Space
     painter.restore()
 
-def customSetImage(instance, path):
-    instance.path = path
-    instance.qimage = QImage() if path == "" else QImage(path)
+def customSetImage(instance, image):
+    instance.qimage = QImage() if image is None else image
     instance.pixmap = QPixmap(50, 50).fromImage(instance.qimage)
 
     instance.update()
 
 def customMouseMoveEvent(self, event):
     if event.modifiers() != QtCore.Qt.ShiftModifier and event.modifiers() != QtCore.Qt.ControlModifier and event.modifiers() != QtCore.Qt.AltModifier:
+        self.PREVIOUS_DRAG_X = None
+        return 
+
+    # alt modifier is reserved for scrolling through
+    if self.PREVIOUS_DRAG_X and event.modifiers() == QtCore.Qt.AltModifier:
+        diffX = event.x() - self.PREVIOUS_DRAG_X
+
+        if self.PREVIOUS_DRAG_X < event.x() - DRAG_DELTA:
+            self.SIGNAL_WUP.emit(0)
+            self.PREVIOUS_DRAG_X = event.x()
+        elif self.PREVIOUS_DRAG_X > event.x() + DRAG_DELTA:
+            self.SIGNAL_WDN.emit(0)
+            self.PREVIOUS_DRAG_X = event.x()
+
         return 
 
     # MimeData
@@ -94,7 +109,7 @@ class Photobash_Display(QWidget):
 
     def __init__(self, parent):
         super(Photobash_Display, self).__init__(parent)
-        customSetImage(self, "")
+        customSetImage(self, None)
 
     def sizeHint(self):
         return QtCore.QSize(5000,5000)
@@ -112,8 +127,9 @@ class Photobash_Display(QWidget):
     def mouseMoveEvent(self, event):
         customMouseMoveEvent(self, event)
 
-    def setImage(self, path):
-        customSetImage(self, path)
+    def setImage(self, path, image):
+        self.path = path
+        customSetImage(self, image)
 
     def paintEvent(self, event):
         customPaintEvent(self, event)
@@ -128,13 +144,14 @@ class Photobash_Button(QWidget):
     SIGNAL_OPEN_NEW = QtCore.pyqtSignal(str)
     SIGNAL_REFERENCE = QtCore.pyqtSignal(str)
     SIGNAL_DRAG = QtCore.pyqtSignal(int)
+    PREVIOUS_DRAG_X = None
 
     def __init__(self, parent):
         super(Photobash_Button, self).__init__(parent)
         # Variables
         self.number = -1
         # QImage
-        customSetImage(self, "")
+        customSetImage(self, None)
 
         self.scaled_width = 1
         self.scaled_height = 1
@@ -152,8 +169,10 @@ class Photobash_Button(QWidget):
         self.SIGNAL_HOVER.emit("None")
 
     def mousePressEvent(self, event):
-        if (event.modifiers() == QtCore.Qt.NoModifier and event.buttons() == QtCore.Qt.LeftButton):
+        if event.modifiers() == QtCore.Qt.NoModifier and event.buttons() == QtCore.Qt.LeftButton:
             self.SIGNAL_LMB.emit(self.number)
+        if event.modifiers() == QtCore.Qt.AltModifier:
+            self.PREVIOUS_DRAG_X = event.x()
 
     def mouseDoubleClickEvent(self, event):
         # Prevent double click to open the same image twice
@@ -187,8 +206,9 @@ class Photobash_Button(QWidget):
         if action == cmenuReference:
             self.SIGNAL_REFERENCE.emit(self.path)
 
-    def setImage(self, path):
-        customSetImage(self, path)
+    def setImage(self, path, image):
+        self.path = path
+        customSetImage(self, image)
 
     def paintEvent(self, event):
         customPaintEvent(self, event)
