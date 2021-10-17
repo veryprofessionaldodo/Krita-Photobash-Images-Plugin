@@ -55,6 +55,7 @@ class PhotobashDocker(DockWidget):
         # store order of push
         self.cachedPathImages = []
         self.maxCachedImages = 90
+        self.maxNumPages = 9999
 
         self.currPage = 0
         self.directoryPath = Application.readSetting(self.applicationName, self.referencesSetting, "")
@@ -102,7 +103,8 @@ class PhotobashDocker(DockWidget):
         # setup connections for bottom elements
         self.layout.previousButton.clicked.connect(lambda: self.updateCurrentPage(-1))
         self.layout.nextButton.clicked.connect(lambda: self.updateCurrentPage(1))
-        self.layout.slider.valueChanged.connect(self.updateScale)
+        self.layout.scaleSlider.valueChanged.connect(self.updateScale)
+        self.layout.paginationSlider.valueChanged.connect(self.updatePage)
         self.layout.fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
 
     def setupModules(self):
@@ -137,14 +139,14 @@ class PhotobashDocker(DockWidget):
             self.filterImages()
             self.layout.fitCanvasCheckBox.setChecked(self.fitCanvasChecked)
 
-        # initiali organization of images
+        # initial organization of images with favourites
         bufferImages = copy.deepcopy(self.favouriteImages)
         for i in range(0, len(self.foundImages)):
             if not self.foundImages[i] in bufferImages:
                 bufferImages.append(self.foundImages[i])
 
         self.foundImages = bufferImages
-        self.layout.sliderLabel.setText(f"Image Scale : 100%")
+        self.layout.scaleSliderLabel.setText(f"Image Scale : 100%")
 
         self.updateImages()
 
@@ -157,6 +159,9 @@ class PhotobashDocker(DockWidget):
 
             while(it.hasNext()):
                 stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
+
+                if len(newImages) == self.maxNumPages * 9:
+                    break 
 
                 for word in stringsInText:
                     if word in it.filePath().lower() and \
@@ -188,7 +193,11 @@ class PhotobashDocker(DockWidget):
 
     def updateScale(self, value):
         self.currImageScale = value
-        self.layout.sliderLabel.setText(f"Image Scale : {self.currImageScale}%")
+        self.layout.scaleSliderLabel.setText(f"Image Scale : {self.currImageScale}%")
+
+    def updatePage(self, value):
+        self.currPage = value
+        self.updateImages()
 
     def changedFitCanvas(self, state):
         if state == Qt.Checked:
@@ -247,9 +256,21 @@ class PhotobashDocker(DockWidget):
 
         if maxNumPage == 0:
             currPage = 0
+
+        # normalize string length
+        if currPage < 10:
+            currPage = "   " + str(currPage)
+        elif currPage < 100:
+            currPage = "  " + str(currPage)
+        elif currPage < 1000:
+            currPage = " " + str(currPage)
+
         # currPage is the index, but we want to present it in a user friendly way,
         # so it starts at 1
-        self.layout.paginationLabel.setText(f"{str(currPage)}/{str(maxNumPage)}")
+        self.layout.paginationLabel.setText(f"Page: {currPage}/{str(maxNumPage)}")
+        # correction since array begins at 0
+        self.layout.paginationSlider.setMaximum(maxNumPage - 1)
+        self.layout.paginationSlider.setSliderPosition(self.currPage)
 
     def addImageLayer(self, photoPath):
         # Get the document:
