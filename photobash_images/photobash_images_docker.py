@@ -26,7 +26,6 @@ from .photobash_images_modulo import (
 )
 
 class PhotobashDocker(DockWidget):
-
     def __init__(self):
         super().__init__()
 
