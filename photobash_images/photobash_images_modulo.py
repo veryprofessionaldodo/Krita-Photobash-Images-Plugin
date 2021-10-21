@@ -98,7 +98,6 @@ def customMouseMoveEvent(self, event):
         return 
 
     scale = self.scale / 100
-    print("scaling", scale)
 
     # only scale to document if it exists
     if self.fitCanvasChecked and not doc is None:
