@@ -111,6 +111,7 @@ class PhotobashDocker(DockWidget):
         self.imageWidget = Photobash_Display(self.layout.imageWidget)
         self.imageWidget.SIGNAL_HOVER.connect(self.cursorHover)
         self.imageWidget.SIGNAL_CLOSE.connect(self.closePreview)
+
         # Display Grid
         self.imagesButtons = []
         for i in range(0, len(self.layoutButtons)):
@@ -194,6 +195,13 @@ class PhotobashDocker(DockWidget):
         self.currImageScale = value
         self.layout.scaleSliderLabel.setText(f"Image Scale : {self.currImageScale}%")
 
+        # update layout buttons, needed when dragging
+        self.imageWidget.setImageScale(self.currImageScale)
+
+        # normal images
+        for i in range(0, len(self.imagesButtons)):
+            self.imagesButtons[i].setImageScale(self.currImageScale)
+
     def updatePage(self, value):
         self.currPage = value
         self.updateImages()
@@ -205,6 +213,13 @@ class PhotobashDocker(DockWidget):
         else:
             self.fitCanvasChecked = False
             Application.writeSetting(self.applicationName, self.fitCanvasSetting, "false")
+
+        # update layout buttons, needed when dragging
+        self.imageWidget.setFitCanvas(self.fitCanvasChecked)
+
+        # normal images
+        for i in range(0, len(self.imagesButtons)):
+            self.imagesButtons[i].setFitCanvas(self.fitCanvasChecked)
 
     def cursorHover(self, SIGNAL_HOVER):
         # Display Image
@@ -230,7 +245,7 @@ class PhotobashDocker(DockWidget):
             self.cachedImages.pop(removedPath)
 
         self.cachedPathImages = [path] + self.cachedPathImages
-        self.cachedImages[path] = QImage(path).scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.cachedImages[path] = QImage(path).scaled(200, 200, Qt.KeepAspectRatio, Qt.FastTransformation)
 
         return self.cachedImages[path]
 
@@ -291,7 +306,7 @@ class PhotobashDocker(DockWidget):
         else:
             image = QImage(photoPath)
             # scale image
-            image.scaled(image.width() * scale, image.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            image = image.scaled(image.width() * scale, image.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
         # MimeData
         mimedata = QMimeData()

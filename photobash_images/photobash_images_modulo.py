@@ -76,8 +76,6 @@ def customMouseMoveEvent(self, event):
 
     # alt modifier is reserved for scrolling through
     if self.PREVIOUS_DRAG_X and event.modifiers() == QtCore.Qt.AltModifier:
-        diffX = event.x() - self.PREVIOUS_DRAG_X
-
         if self.PREVIOUS_DRAG_X < event.x() - DRAG_DELTA:
             self.SIGNAL_WUP.emit(0)
             self.PREVIOUS_DRAG_X = event.x()
@@ -91,21 +89,43 @@ def customMouseMoveEvent(self, event):
     mimedata = QMimeData()
     url = QUrl().fromLocalFile(self.path)
     mimedata.setUrls([url])
-    mimedata.setImageData(self.pixmap)
+
+    # create appropriate res image that will placed
+    doc = Krita.instance().activeDocument()
+
+    # Saving a non-existent document causes crashes, so lets check for that first.
+    if doc is None:
+        return 
+
+    scale = self.scale / 100
+    print("scaling", scale)
+
+    # only scale to document if it exists
+    if self.fitCanvasChecked and not doc is None:
+        fullImage = QImage(self.path).scaled(doc.width() * scale, doc.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    else:
+        fullImage = QImage(self.path)
+        # scale image, now knowing the bounds
+        fullImage = fullImage.scaled(fullImage.width() * scale, fullImage.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+    fullPixmap = QPixmap(50, 50).fromImage(fullImage)
+    mimedata.setImageData(fullPixmap)
 
     # Clipboard
     QApplication.clipboard().setImage(self.qimage)
 
-    # Drag
+    # drag, using information about the smaller version of the image
     drag = QDrag(self)
     drag.setMimeData(mimedata)
     drag.setPixmap(self.pixmap)
-    drag.setHotSpot(event.pos())
+    drag.setHotSpot(QPoint(self.qimage.width() / 2, self.qimage.height() / 2))
     drag.exec_(Qt.CopyAction)
 
 class Photobash_Display(QWidget):
     SIGNAL_HOVER = QtCore.pyqtSignal(str)
     SIGNAL_CLOSE = QtCore.pyqtSignal(int)
+    fitCanvasChecked = False
+    scale = 100
 
     def __init__(self, parent):
         super(Photobash_Display, self).__init__(parent)
@@ -127,6 +147,12 @@ class Photobash_Display(QWidget):
     def mouseMoveEvent(self, event):
         customMouseMoveEvent(self, event)
 
+    def setFitCanvas(self, newFit):
+        self.fitCanvasChecked = newFit
+
+    def setImageScale(self, newScale):
+        self.scale = newScale
+
     def setImage(self, path, image):
         self.path = path
         customSetImage(self, image)
@@ -145,6 +171,8 @@ class Photobash_Button(QWidget):
     SIGNAL_REFERENCE = QtCore.pyqtSignal(str)
     SIGNAL_DRAG = QtCore.pyqtSignal(int)
     PREVIOUS_DRAG_X = None
+    fitCanvasChecked = False
+    scale = 100
 
     def __init__(self, parent):
         super(Photobash_Button, self).__init__(parent)
@@ -155,6 +183,12 @@ class Photobash_Button(QWidget):
 
         self.scaled_width = 1
         self.scaled_height = 1
+
+    def setImageScale(self, newScale):
+        self.scale = newScale
+
+    def setFitCanvas(self, newFit):
+        self.fitCanvasChecked = newFit
 
     def setNumber(self, number):
         self.number = number
