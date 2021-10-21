@@ -285,11 +285,17 @@ class PhotobashDocker(DockWidget):
 
         scale = self.currImageScale / 100
 
+        print(self)
+        print(self.width())
+        print(self.height())
+
         # Scale Image
         if self.fitCanvasChecked:
             image = QImage(photoPath).scaled(doc.width() * scale, doc.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         else:
-            image = QImage(photoPath).scaled(self.width() * scale, self.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            image = QImage(photoPath)
+            # scale image
+            image.scaled(image.width() * scale, image.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
         # MimeData
         mimedata = QMimeData()
