@@ -4,5 +4,5 @@ ServiceTypes=Krita/PythonPlugin
 X-KDE-Library=photobash_images
 X-Python-2-Compatible=false
 X-Krita-Manual=photobash_images_manual.html
-Name=Krita Photobash Images
-Comment=A plugin to fetch images from a specified folder. Very useful for photobashing!
+Name=Photobash Images
+Comment=An advanced Krita Plugin, laser-focused on improving productivity for photo-bashing and references!

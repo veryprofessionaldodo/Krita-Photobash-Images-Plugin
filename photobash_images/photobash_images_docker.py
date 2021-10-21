@@ -75,10 +75,10 @@ class PhotobashDocker(DockWidget):
         self.directoryPlugin = str(os.path.dirname(os.path.realpath(__file__)))
 
         # Photo Bash Docker
-        self.window = QWidget()
+        self.mainWidget = QWidget(self)
+        self.setWidget(self.mainWidget)
 
-        self.layout = uic.loadUi(self.directoryPlugin + '/photobash_images_docker.ui', self.window)
-        self.setWidget(self.window)
+        self.layout = uic.loadUi(self.directoryPlugin + '/photobash_images_docker.ui', self.mainWidget)
 
         self.layoutButtons = [
             self.layout.imagesButtons0,
@@ -124,6 +124,7 @@ class PhotobashDocker(DockWidget):
             imageButton.SIGNAL_WDN.connect(lambda: self.updateCurrentPage(1))
             imageButton.SIGNAL_PREVIEW.connect(self.openPreview)
             imageButton.SIGNAL_FAVOURITE.connect(self.pinToFavourites)
+            imageButton.SIGNAL_UN_FAVOURITE.connect(self.unpinFromFavourites)
             imageButton.SIGNAL_OPEN_NEW.connect(self.openNewDocument)
             imageButton.SIGNAL_REFERENCE.connect(self.placeReference)
             self.imagesButtons.append(imageButton)
@@ -154,33 +155,44 @@ class PhotobashDocker(DockWidget):
         newImages = []
         self.currPage = 0
 
-        if self.directoryPath != "":
-            it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
+        if self.directoryPath == "":
+            self.foundImages = []
+            self.favouriteImages = []
+            self.updateImages()
+            return 
 
-            while(it.hasNext()):
-                stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
+        it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
 
-                if len(newImages) == self.maxNumPages * 9:
-                    break 
+        while(it.hasNext()):
+            stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
 
-                for word in stringsInText:
-                    if word in it.filePath().lower() and \
-                        (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
-                        (not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
-                        newImages.append(it.filePath())
+            if len(newImages) == self.maxNumPages * 9:
+                break
 
-                it.next()
+            for word in stringsInText:
+                if word in it.filePath().lower() and \
+                    (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
+                    (not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
+                    newImages.append(it.filePath())
 
-            # list of images that match the filter
-            if len(self.foundImages) != len(newImages):
-                self.foundImages = newImages
-                self.updateImages()
-            else:
-                for i in range(0, len(newImages)):
-                    if self.foundImages[i] != newImages[i]:
-                        self.foundImages = newImages
-                        self.updateImages()
-                        return
+            it.next()
+
+        missingFavourites = []
+        for favourite in self.favouriteImages:
+            # favourite is missing
+            if not favourite in newImages:
+                missingFavourites.append(favourite)
+
+        # remove missing favourites
+        for missing in missingFavourites:
+            self.favouriteImages.remove(missing)
+
+        # remove favourites from the images, to place them on the beginning
+        for fav in self.favouriteImages:
+            newImages.remove(fav)
+
+        self.foundImages = self.favouriteImages + newImages
+        self.updateImages()
 
     def updateCurrentPage(self, increment):
         if (self.currPage == 0 and increment == -1) or \
@@ -189,6 +201,8 @@ class PhotobashDocker(DockWidget):
             return
 
         self.currPage += increment
+        maxNumPage = math.ceil(len(self.foundImages) / len(self.layoutButtons))
+        self.currPage = max(0, min(self.currPage, maxNumPage - 1))
         self.updateImages()
 
     def updateScale(self, value):
@@ -259,9 +273,11 @@ class PhotobashDocker(DockWidget):
             if i < maxRange:
                 # image is within valid range, apply it
                 path = self.foundImages[i + buttonsSize * self.currPage]
+                self.imagesButtons[i].setFavourite(path in self.favouriteImages)
                 self.imagesButtons[i].setImage(path, self.getImage(path))
             else:
                 # image is outside the range
+                self.imagesButtons[i].setFavourite(False)
                 self.imagesButtons[i].setImage("",None)
 
         # update text for pagination
@@ -356,6 +372,16 @@ class PhotobashDocker(DockWidget):
 
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
         self.updateImages()
+
+    def unpinFromFavourites(self, path):
+        self.currPage = 0
+        if path in self.favouriteImages:
+            self.favouriteImages.remove(path)
+
+        Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
+
+        # requires a re-filter
+        self.filterImages()
 
     def leaveEvent(self, event):
         self.layout.filterTextEdit.clearFocus()

@@ -20,10 +20,17 @@ from PyQt5 import QtWidgets, QtCore
 
 DRAG_DELTA = 30
 
+FAVOURITE_TRIANGLE = QPolygon([
+    QPoint(0.0, 0.0),
+    QPoint(0.0, 20.0),
+    QPoint(20.0, 0.0)
+])
+
 def customPaintEvent(instance, event):
     painter = QPainter(instance)
     painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-    painter.setPen(QtCore.Qt.NoPen)
+    painter.setPen(QPen(Qt.black, 2, Qt.SolidLine))
+    painter.setBrush(QBrush(Qt.white, Qt.SolidPattern))
 
     # Calculations
     total_width = event.rect().width()
@@ -59,6 +66,11 @@ def customPaintEvent(instance, event):
     painter.translate(offset_x, offset_y)
     painter.scale(size, size)
     painter.drawImage(0,0,instance.qimage)
+
+    # paint something if it is a favourite
+    if hasattr(instance, 'isFavourite'):
+        if instance.isFavourite: 
+            painter.drawPolygon(FAVOURITE_TRIANGLE)
 
     # Restore Space
     painter.restore()
@@ -166,12 +178,14 @@ class Photobash_Button(QWidget):
     SIGNAL_WDN = QtCore.pyqtSignal(int)
     SIGNAL_PREVIEW = QtCore.pyqtSignal(str)
     SIGNAL_FAVOURITE = QtCore.pyqtSignal(str)
+    SIGNAL_UN_FAVOURITE = QtCore.pyqtSignal(str)
     SIGNAL_OPEN_NEW = QtCore.pyqtSignal(str)
     SIGNAL_REFERENCE = QtCore.pyqtSignal(str)
     SIGNAL_DRAG = QtCore.pyqtSignal(int)
     PREVIOUS_DRAG_X = None
     fitCanvasChecked = False
     scale = 100
+    isFavourite = False
 
     def __init__(self, parent):
         super(Photobash_Button, self).__init__(parent)
@@ -182,6 +196,9 @@ class Photobash_Button(QWidget):
 
         self.scaled_width = 1
         self.scaled_height = 1
+
+    def setFavourite(self, newFavourite):
+        self.isFavourite = newFavourite
 
     def setImageScale(self, newScale):
         self.scale = newScale
@@ -224,8 +241,10 @@ class Photobash_Button(QWidget):
     # menu opened with right click
     def contextMenuEvent(self, event):
         cmenu = QMenu(self)
-        cmenuDisplay = cmenu.addAction("Preview In Docker")
-        cmenuFavourite = cmenu.addAction("Pin To Beginning")
+
+        cmenuDisplay = cmenu.addAction("Preview in Docker")
+        favouriteString = "Unpin from Beginning" if self.isFavourite else "Pin to Beginning"
+        cmenuFavourite = cmenu.addAction(favouriteString)
         cmenuOpenNew = cmenu.addAction("Open as New Document")
         cmenuReference = cmenu.addAction("Place as Reference")
 
@@ -237,7 +256,10 @@ class Photobash_Button(QWidget):
         if action == cmenuDisplay:
             self.SIGNAL_PREVIEW.emit(self.path)
         if action == cmenuFavourite:
-            self.SIGNAL_FAVOURITE.emit(self.path)
+            if self.isFavourite:
+                self.SIGNAL_UN_FAVOURITE.emit(self.path)
+            else:
+                self.SIGNAL_FAVOURITE.emit(self.path)
         if action == cmenuOpenNew:
             self.SIGNAL_OPEN_NEW.emit(self.path)
         if action == cmenuReference:

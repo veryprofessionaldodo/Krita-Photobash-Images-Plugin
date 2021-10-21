@@ -47,7 +47,7 @@
       <item>
        <widget class="QLineEdit" name="filterTextEdit">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -75,7 +75,7 @@
       <item>
        <widget class="QPushButton" name="changePathButton">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
