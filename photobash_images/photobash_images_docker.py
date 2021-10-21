@@ -24,6 +24,7 @@ from .photobash_images_modulo import (
     Photobash_Display,
     Photobash_Button,
 )
+import os.path
 
 class PhotobashDocker(DockWidget):
     def __init__(self):
@@ -97,7 +98,7 @@ class PhotobashDocker(DockWidget):
         self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # setup connections for top elements
-        self.layout.filterTextEdit.textChanged.connect(self.filterImages)
+        self.layout.filterTextEdit.textChanged.connect(self.textFilterChanged)
         self.layout.changePathButton.clicked.connect(self.changePath)
         # setup connections for bottom elements
         self.layout.previousButton.clicked.connect(lambda: self.updateCurrentPage(-1))
@@ -137,21 +138,40 @@ class PhotobashDocker(DockWidget):
         # initialize based on what was setup
         if self.directoryPath != "":
             self.layout.changePathButton.setText("Change References Folder")
-            self.filterImages()
+            self.getImagesFromDirectory()
             self.layout.fitCanvasCheckBox.setChecked(self.fitCanvasChecked)
 
         # initial organization of images with favourites
-        bufferImages = copy.deepcopy(self.favouriteImages)
-        for i in range(0, len(self.foundImages)):
-            if not self.foundImages[i] in bufferImages:
-                bufferImages.append(self.foundImages[i])
-
-        self.foundImages = bufferImages
+        self.reorganizeImages()
         self.layout.scaleSliderLabel.setText(f"Image Scale : 100%")
 
         self.updateImages()
 
-    def filterImages(self):
+    def reorganizeImages(self):
+        for fav in self.favouriteImages:
+            if fav in self.foundImages:
+                self.foundImages.remove(fav)
+
+        self.foundImages = self.favouriteImages + self.foundImages
+
+    def textFilterChanged(self):
+        stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
+        if self.layout.filterTextEdit.text().lower() == "":
+            self.foundImages = self.allImages
+            self.updateImages()
+            return 
+
+        newImages = []
+        for word in stringsInText:
+            for path in self.allImages:
+                # exclude path outside from search
+                if word in path.replace(self.directoryPath, "").lower():
+                    newImages.append(path)
+
+        self.foundImages = newImages
+        self.updateImages()
+
+    def getImagesFromDirectory(self):
         newImages = []
         self.currPage = 0
 
@@ -164,34 +184,15 @@ class PhotobashDocker(DockWidget):
         it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
 
         while(it.hasNext()):
-            stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
-
-            if len(newImages) == self.maxNumPages * 9:
-                break
-
-            for word in stringsInText:
-                if word in it.filePath().lower() and \
-                    (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
-                    (not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
-                    newImages.append(it.filePath())
+            if (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
+                (not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
+                newImages.append(it.filePath())
 
             it.next()
 
-        missingFavourites = []
-        for favourite in self.favouriteImages:
-            # favourite is missing
-            if not favourite in newImages:
-                missingFavourites.append(favourite)
-
-        # remove missing favourites
-        for missing in missingFavourites:
-            self.favouriteImages.remove(missing)
-
-        # remove favourites from the images, to place them on the beginning
-        for fav in self.favouriteImages:
-            newImages.remove(fav)
-
-        self.foundImages = self.favouriteImages + newImages
+        self.foundImages = copy.deepcopy(newImages)
+        self.allImages = copy.deepcopy(newImages)
+        self.reorganizeImages()
         self.updateImages()
 
     def updateCurrentPage(self, increment):
@@ -217,7 +218,8 @@ class PhotobashDocker(DockWidget):
             self.imagesButtons[i].setImageScale(self.currImageScale)
 
     def updatePage(self, value):
-        self.currPage = value
+        maxNumPage = math.ceil(len(self.foundImages) / len(self.layoutButtons))
+        self.currPage = max(0, min(self.currPage, maxNumPage - 1))
         self.updateImages()
 
     def changedFitCanvas(self, state):
@@ -263,7 +265,18 @@ class PhotobashDocker(DockWidget):
 
         return self.cachedImages[path]
 
+    # makes sure the first 9 found images exist
+    def checkValidImages(self):
+        found = 0
+        for path in self.foundImages:
+            if found == 9:
+                return
+
+            if self.checkPath(path):
+                found = found + 1
+
     def updateImages(self):
+        self.checkValidImages()
         buttonsSize = len(self.imagesButtons)
 
         # don't try to access image that isn't there
@@ -303,6 +316,11 @@ class PhotobashDocker(DockWidget):
         self.layout.paginationSlider.setSliderPosition(self.currPage)
 
     def addImageLayer(self, photoPath):
+        # file no longer exists, remove from all structures
+        if not self.checkPath(photoPath):
+            self.updateImages()
+            return
+        
         # Get the document:
         doc = Krita.instance().activeDocument()
 
@@ -337,7 +355,26 @@ class PhotobashDocker(DockWidget):
         Krita.instance().action('edit_paste').trigger()
         Krita.instance().activeDocument().refreshProjection()
 
+    def checkPath(self, path):
+        if not os.path.isfile(path):
+            self.foundImages.remove(path)
+            if path in self.favouriteImages:
+                self.favouriteImages.remove(path)
+
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Missing Image!")
+            dlg.setText("This image you tried to open was not found. Removing from the list.")
+            dlg.exec()
+
+            return False
+
+        return True
+
     def openNewDocument(self, path):
+        if not self.checkPath(path):
+            self.updateImages()
+            return 
+
         document = Krita.instance().openDocument(path)
         Application.activeWindow().addView(document)
 
@@ -363,14 +400,11 @@ class PhotobashDocker(DockWidget):
 
     def pinToFavourites(self, path):
         self.currPage = 0
-        if path in self.favouriteImages:
-            self.favouriteImages.remove(path)
         self.favouriteImages = [path] + self.favouriteImages
 
-        self.foundImages.remove(path)
-        self.foundImages = [path] + self.foundImages
-
+        self.layout.filterTextEdit.setValue("")
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
+        self.reorganizeImages()
         self.updateImages()
 
     def unpinFromFavourites(self, path):
@@ -379,9 +413,11 @@ class PhotobashDocker(DockWidget):
             self.favouriteImages.remove(path)
 
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
+        self.layout.filterTextEdit.setValue("")
 
         # requires a re-filter
-        self.filterImages()
+        self.reorganizeImages()
+        self.updateImages()
 
     def leaveEvent(self, event):
         self.layout.filterTextEdit.clearFocus()
@@ -405,7 +441,9 @@ class PhotobashDocker(DockWidget):
             Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
 
         self.favouriteImages = []
+        self.foundImages = []
+
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, "")
 
         self.layout.changePathButton.setText("Change References Folder")
-        self.filterImages()
+        self.getImagesFromDirectory()
