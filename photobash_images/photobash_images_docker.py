@@ -285,10 +285,6 @@ class PhotobashDocker(DockWidget):
 
         scale = self.currImageScale / 100
 
-        print(self)
-        print(self.width())
-        print(self.height())
-
         # Scale Image
         if self.fitCanvasChecked:
             image = QImage(photoPath).scaled(doc.width() * scale, doc.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)

@@ -196,6 +196,10 @@ class Photobash_Button(QWidget):
         cmenuOpenNew = cmenu.addAction("Open as New Document")
         cmenuReference = cmenu.addAction("Place as Reference")
 
+        background = qApp.palette().color(QPalette.Window).name().split("#")[1]
+        cmenuStyleSheet = f"""QMenu {{ background-color: #AA{background}; border: 1px solid #{background}; }}"""
+        cmenu.setStyleSheet(cmenuStyleSheet)
+
         action = cmenu.exec_(self.mapToGlobal(event.pos()))
         if action == cmenuDisplay:
             self.SIGNAL_PREVIEW.emit(self.path)
