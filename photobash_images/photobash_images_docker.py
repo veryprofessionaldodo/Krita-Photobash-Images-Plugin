@@ -378,12 +378,15 @@ class PhotobashDocker(DockWidget):
         document = Krita.instance().openDocument(path)
         Application.activeWindow().addView(document)
 
-    def placeReference(self, SIGNAL_REFERENCE):
+    def placeReference(self, path):
+        if not self.checkPath(path):
+            return
+
         # MimeData
         mimedata = QMimeData()
-        url = QUrl().fromLocalFile(SIGNAL_REFERENCE)
+        url = QUrl().fromLocalFile(path)
         mimedata.setUrls([url])
-        image = QImage(SIGNAL_REFERENCE)
+        image = QImage(path)
         mimedata.setImageData(image)
 
         QApplication.clipboard().setImage(image)
