@@ -19,11 +19,12 @@ from krita import *
 from PyQt5 import QtWidgets, QtCore
 
 DRAG_DELTA = 30
+TRIANGLE_SIZE = 30
 
 FAVOURITE_TRIANGLE = QPolygon([
-    QPoint(0.0, 0.0),
-    QPoint(0.0, 20.0),
-    QPoint(20.0, 0.0)
+    QPoint(0, 0),
+    QPoint(0, TRIANGLE_SIZE),
+    QPoint(TRIANGLE_SIZE, 0)
 ])
 
 def customPaintEvent(instance, event):

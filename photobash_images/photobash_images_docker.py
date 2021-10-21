@@ -358,6 +358,7 @@ class PhotobashDocker(DockWidget):
     def checkPath(self, path):
         if not os.path.isfile(path):
             self.foundImages.remove(path)
+            self.allImages.remove(path)
             if path in self.favouriteImages:
                 self.favouriteImages.remove(path)
 
@@ -405,19 +406,18 @@ class PhotobashDocker(DockWidget):
         self.currPage = 0
         self.favouriteImages = [path] + self.favouriteImages
 
-        self.layout.filterTextEdit.setValue("")
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
         self.reorganizeImages()
         self.updateImages()
 
     def unpinFromFavourites(self, path):
-        self.currPage = 0
         if path in self.favouriteImages:
             self.favouriteImages.remove(path)
 
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
-        self.layout.filterTextEdit.setValue("")
 
+        # resets order to the default
+        self.foundImages = self.allImages
         # requires a re-filter
         self.reorganizeImages()
         self.updateImages()
