@@ -157,7 +157,7 @@ class PhotobashDocker(DockWidget):
     def textFilterChanged(self):
         stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
         if self.layout.filterTextEdit.text().lower() == "":
-            self.foundImages = self.allImages
+            self.foundImages = copy.deepcopy(self.allImages)
             self.updateImages()
             return 
 
@@ -409,6 +409,7 @@ class PhotobashDocker(DockWidget):
         self.currPage = 0
         self.favouriteImages = [path] + self.favouriteImages
 
+        # save setting for next restart
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
         self.reorganizeImages()
         self.updateImages()
@@ -420,8 +421,7 @@ class PhotobashDocker(DockWidget):
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
 
         # resets order to the default
-        self.foundImages = self.allImages
-        # requires a re-filter
+        self.foundImages = copy.deepcopy(self.allImages)
         self.reorganizeImages()
         self.updateImages()
 
