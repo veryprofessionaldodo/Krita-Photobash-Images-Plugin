@@ -183,9 +183,10 @@ class PhotobashDocker(DockWidget):
 
         it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
 
+
         while(it.hasNext()):
-            if (".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
-                (not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
+            if (".webp" in it.filePath() or ".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
+                (not ".webp~" in it.filePath() and not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
                 newImages.append(it.filePath())
 
             it.next()
