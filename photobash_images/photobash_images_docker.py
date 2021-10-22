@@ -357,8 +357,10 @@ class PhotobashDocker(DockWidget):
 
     def checkPath(self, path):
         if not os.path.isfile(path):
-            self.foundImages.remove(path)
-            self.allImages.remove(path)
+            if path in self.foundImages:
+                self.foundImages.remove(path)
+            if path in self.allImages:
+                self.allImages.remove(path)
             if path in self.favouriteImages:
                 self.favouriteImages.remove(path)
 
@@ -381,6 +383,7 @@ class PhotobashDocker(DockWidget):
 
     def placeReference(self, path):
         if not self.checkPath(path):
+            self.updateImages()
             return
 
         # MimeData
