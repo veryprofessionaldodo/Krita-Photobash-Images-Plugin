@@ -244,7 +244,7 @@ class Photobash_Button(QWidget):
         cmenu = QMenu(self)
 
         cmenuDisplay = cmenu.addAction("Preview in Docker")
-        favouriteString = "Unpin from Beginning" if self.isFavourite else "Pin to Beginning"
+        favouriteString = "Unpin" if self.isFavourite else "Pin to Beginning"
         cmenuFavourite = cmenu.addAction(favouriteString)
         cmenuOpenNew = cmenu.addAction("Open as New Document")
         cmenuReference = cmenu.addAction("Place as Reference")

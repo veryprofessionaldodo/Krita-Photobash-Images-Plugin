@@ -20,14 +20,14 @@ After setting the references folder, you now have a list of 9 images in the dock
 - Clicking on the "next" and "previous" buttons on the bottom row of the docker;
 - Scrolling the slider next to the pages indicator;
 - Mouse Wheel Up and Down;
-- Alt + Drag, in case you're using a stylus. 
+- Alt + Drag Left or Right, in case you're using a stylus. 
 
 If the images in the folders are of large size, there may be some slowdown when scrolling quickly. However, the plugin is caching the previews, and stores up to 90 images, so you can scroll through them back more easily later. 
 
 To add an image to the document, all you'll have to do is click on the image. That's it! You can also drag the image to a specific position using Shift + Drag. After adding, you'll notice that the image might be scaled. To reduce needing to always transform to the correct size, there are two elements to assist you:
 
 - The "Scale To Canvas" checkbox. This does exactly what you expect, and scales the image to fit the canvas. If the image is larger than the canvas, it scales it down, and if it's smaller, it scales it up! This can work in tandem with the next assistant;
-- The "Image Scale Slider" controls how large the image will be when it's placed. If the scale is 50%, with "Scale To Canvas" enabled, it will add the image with the maximum size of half the canvas. If "Scale To Canvas" is disabled, the image scale will be respect the original resolutions of the image. If it's 100%, it will add the image in full resolution, if it's 50% it will add the image at half the original resolution. 
+- The "Image Scale" slider controls how large the image will be when it's placed. If the scale is 50%, with "Scale To Canvas" enabled, it will add the image with the maximum size of half the canvas. If "Scale To Canvas" is disabled, the image scale will be respect the original resolutions of the image. If it's 100%, it will add the image in full resolution, if it's 50% it will add the image at half the original resolution. 
 
 Dragging the image presents the same behaviour as clicking, with the only difference being that the image will be added in the position you specify! It will always preserve aspect ratio, so there's no need to worry with distortion.
 
