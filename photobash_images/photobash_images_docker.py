@@ -62,7 +62,7 @@ class PhotobashDocker(DockWidget):
         favouriteImagesValues = Application.readSetting(self.applicationName, self.foundFavouritesSetting, "").split("'")
 
         for value in favouriteImagesValues:
-            if value != "[" and value != ", " and value != "]" and value != "":
+            if value != "[" and value != ", " and value != "]" and value != "" and value != "[]":
                 self.favouriteImages.append(value)
 
         self.bg_alpha = str("background-color: rgba(0, 0, 0, 50); ")
