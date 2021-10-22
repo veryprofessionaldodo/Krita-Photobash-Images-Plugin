@@ -138,7 +138,7 @@
        <number>0</number>
       </property>
       <property name="spacing">
-       <number>4</number>
+       <number>0</number>
       </property>
       <item row="0" column="2">
        <widget class="QWidget" name="imagesButtons2" native="true">

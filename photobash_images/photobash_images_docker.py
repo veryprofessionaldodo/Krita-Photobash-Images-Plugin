@@ -104,6 +104,7 @@ class PhotobashDocker(DockWidget):
         self.layout.previousButton.clicked.connect(lambda: self.updateCurrentPage(-1))
         self.layout.nextButton.clicked.connect(lambda: self.updateCurrentPage(1))
         self.layout.scaleSlider.valueChanged.connect(self.updateScale)
+        self.layout.paginationSlider.setMinimum(0)
         self.layout.paginationSlider.valueChanged.connect(self.updatePage)
         self.layout.fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
 
@@ -148,16 +149,21 @@ class PhotobashDocker(DockWidget):
         self.updateImages()
 
     def reorganizeImages(self):
-        for fav in self.favouriteImages:
-            if fav in self.foundImages:
-                self.foundImages.remove(fav)
+        # organize images, taking into account favourites
+        # and their respective order
+        favouriteFoundImages = []
+        for image in self.favouriteImages:
+            if image in self.foundImages:
+                self.foundImages.remove(image)
+                favouriteFoundImages.append(image)
 
-        self.foundImages = self.favouriteImages + self.foundImages
+        self.foundImages = favouriteFoundImages + self.foundImages
 
     def textFilterChanged(self):
         stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
         if self.layout.filterTextEdit.text().lower() == "":
             self.foundImages = copy.deepcopy(self.allImages)
+            self.reorganizeImages()
             self.updateImages()
             return 
 
@@ -165,10 +171,11 @@ class PhotobashDocker(DockWidget):
         for word in stringsInText:
             for path in self.allImages:
                 # exclude path outside from search
-                if word in path.replace(self.directoryPath, "").lower() and not path in newImages:
+                if word in path.replace(self.directoryPath, "").lower() and not path in newImages and word != "" and word != " ":
                     newImages.append(path)
 
         self.foundImages = newImages
+        self.reorganizeImages()
         self.updateImages()
 
     def getImagesFromDirectory(self):
@@ -220,7 +227,7 @@ class PhotobashDocker(DockWidget):
 
     def updatePage(self, value):
         maxNumPage = math.ceil(len(self.foundImages) / len(self.layoutButtons))
-        self.currPage = max(0, min(self.currPage, maxNumPage - 1))
+        self.currPage = max(0, min(value, maxNumPage - 1))
         self.updateImages()
 
     def changedFitCanvas(self, state):
@@ -421,8 +428,14 @@ class PhotobashDocker(DockWidget):
 
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, str(self.favouriteImages))
 
-        # resets order to the default
-        self.foundImages = copy.deepcopy(self.allImages)
+        # resets order to the default, but checks if foundImages is only a subset
+        # in case it is searching
+        orderedImages = []
+        for image in self.allImages:
+            if image in self.foundImages:
+                orderedImages.append(image)
+
+        self.foundImages = orderedImages
         self.reorganizeImages()
         self.updateImages()
 
@@ -452,5 +465,8 @@ class PhotobashDocker(DockWidget):
 
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, "")
 
-        self.layout.changePathButton.setText("Change References Folder")
+        if self.directoryPath == "":
+            self.layout.changePathButton.setText("Set References Folder")
+        else:
+            self.layout.changePathButton.setText("Change References Folder")
         self.getImagesFromDirectory()

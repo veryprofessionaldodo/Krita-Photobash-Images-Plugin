@@ -19,7 +19,7 @@ from krita import *
 from PyQt5 import QtWidgets, QtCore
 
 DRAG_DELTA = 30
-TRIANGLE_SIZE = 30
+TRIANGLE_SIZE = 20
 
 FAVOURITE_TRIANGLE = QPolygon([
     QPoint(0, 0),
@@ -67,10 +67,11 @@ def customPaintEvent(instance, event):
     painter.translate(offset_x, offset_y)
     painter.scale(size, size)
     painter.drawImage(0,0,instance.qimage)
-
     # paint something if it is a favourite
     if hasattr(instance, 'isFavourite'):
         if instance.isFavourite: 
+            # reset scale to draw favourite triangle
+            painter.scale(1/size, 1/size)
             painter.drawPolygon(FAVOURITE_TRIANGLE)
 
     # Restore Space
@@ -83,7 +84,7 @@ def customSetImage(instance, image):
     instance.update()
 
 def customMouseMoveEvent(self, event):
-    if event.modifiers() != QtCore.Qt.ShiftModifier and event.modifiers() != QtCore.Qt.ControlModifier and event.modifiers() != QtCore.Qt.AltModifier:
+    if event.modifiers() != QtCore.Qt.ShiftModifier and event.modifiers() != QtCore.Qt.AltModifier:
         self.PREVIOUS_DRAG_X = None
         return 
 
