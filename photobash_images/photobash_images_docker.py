@@ -165,7 +165,7 @@ class PhotobashDocker(DockWidget):
         for word in stringsInText:
             for path in self.allImages:
                 # exclude path outside from search
-                if word in path.replace(self.directoryPath, "").lower():
+                if word in path.replace(self.directoryPath, "").lower() and not path in newImages:
                     newImages.append(path)
 
         self.foundImages = newImages
