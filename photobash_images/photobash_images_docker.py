@@ -320,7 +320,7 @@ class PhotobashDocker(DockWidget):
         # so it starts at 1
         self.layout.paginationLabel.setText(f"Page: {currPage}/{str(maxNumPage)}")
         # correction since array begins at 0
-        self.layout.paginationSlider.setMaximum(maxNumPage - 1)
+        self.layout.paginationSlider.setRange(0, maxNumPage - 1)
         self.layout.paginationSlider.setSliderPosition(self.currPage)
 
     def addImageLayer(self, photoPath):
