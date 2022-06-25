@@ -450,15 +450,18 @@ class PhotobashDocker(DockWidget):
             self.addImageLayer(self.foundImages[position + len(self.imagesButtons) * self.currPage])
 
     def changePath(self):
-        fileDialog = QFileDialog(QWidget(self));
-        fileDialog.setFileMode(QFileDialog.DirectoryOnly);
+        fileDialog = QFileDialog(QWidget(self))
+        fileDialog.setFileMode(QFileDialog.DirectoryOnly)
 
         if self.directoryPath == "":
-            self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", QStandardPaths.writableLocation(QStandardPaths.PicturesLocation))
-            Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
+            path = QStandardPaths.writableLocation(QStandardPaths.PicturesLocation)
         else:
-            self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, "Change Directory for Images", self.directoryPath)
-            Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
+            path = QStandardPaths.writableLocation(QStandardPaths.PicturesLocation)
+        
+        title = "Change Directory for Images"
+        dialogOptions = QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
+        self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, title, path, dialogOptions)
+        Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
 
         self.favouriteImages = []
         self.foundImages = []
@@ -469,4 +472,5 @@ class PhotobashDocker(DockWidget):
             self.layout.changePathButton.setText("Set References Folder")
         else:
             self.layout.changePathButton.setText("Change References Folder")
+
         self.getImagesFromDirectory()
