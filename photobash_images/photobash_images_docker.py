@@ -13,8 +13,8 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+# along with this 
+# program.  If not, see <http://www.gnu.org/licenses/>.
 
 from krita import *
 import copy
@@ -50,11 +50,14 @@ class PhotobashDocker(DockWidget):
         self.imagesButtons = []
         self.foundImages = []
         self.favouriteImages = []
+        
         # maps path to image
         self.cachedImages = {}
+        self.cachedSearchKeywords = {}
         # store order of push
         self.cachedPathImages = []
         self.maxCachedImages = 90
+        self.maxCachedSearchKeyword = 2000
         self.maxNumPages = 9999
 
         self.currPage = 0
@@ -92,6 +95,7 @@ class PhotobashDocker(DockWidget):
             self.layout.imagesButtons7,
             self.layout.imagesButtons8,
         ]
+
 
         # Adjust Layouts
         self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
@@ -173,6 +177,10 @@ class PhotobashDocker(DockWidget):
                 # exclude path outside from search
                 if word in path.replace(self.directoryPath, "").lower() and not path in newImages and word != "" and word != " ":
                     newImages.append(path)
+                elif path in self.cachedSearchKeywords:
+                    searchString = ",".join(self.cachedSearchKeywords[path]).lower()
+                    if word in searchString and not path in newImages and word != "" and word != " ":
+                        newImages.append(path)
 
         self.foundImages = newImages
         self.reorganizeImages()
@@ -194,6 +202,7 @@ class PhotobashDocker(DockWidget):
         while(it.hasNext()):
             if (".webp" in it.filePath() or ".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
                 (not ".webp~" in it.filePath() and not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
+                self.cacheSearchTerms(it.filePath())
                 newImages.append(it.filePath())
 
             it.next()
@@ -203,6 +212,15 @@ class PhotobashDocker(DockWidget):
         self.reorganizeImages()
         self.updateImages()
 
+    def cacheSearchTerms(self,key):
+        baseName = os.path.basename(key)
+        fileName = os.path.splitext(baseName)[0]
+        keywordFile = self.directoryPath +"/"+ fileName +'.txt'
+        if os.path.exists(keywordFile):
+            with open(keywordFile,'r') as searchFile:
+                lines = searchFile.readlines(self.maxCachedSearchKeyword)
+                self.cachedSearchKeywords[key] = lines
+                
     def updateCurrentPage(self, increment):
         if (self.currPage == 0 and increment == -1) or \
             ((self.currPage + 1) * len(self.imagesButtons) > len(self.foundImages) and increment == 1) or \
@@ -267,12 +285,17 @@ class PhotobashDocker(DockWidget):
         if len(self.cachedImages) > self.maxCachedImages: 
             removedPath = self.cachedPathImages.pop()
             self.cachedImages.pop(removedPath)
+            if removedPath in self.cachedSearchKeywords:
+                self.cachedSearchKeywords.pop(removedPath)
 
         self.cachedPathImages = [path] + self.cachedPathImages
         self.cachedImages[path] = QImage(path).scaled(200, 200, Qt.KeepAspectRatio, Qt.FastTransformation)
-
+        self.cacheSearchTerms(os.path.basename(path))
         return self.cachedImages[path]
-
+    
+    def splitPathName(self,path):
+        baseName = os.path.basename(path)
+        return baseName
     # makes sure the first 9 found images exist
     def checkValidImages(self):
         found = 0
@@ -371,6 +394,8 @@ class PhotobashDocker(DockWidget):
                 self.allImages.remove(path)
             if path in self.favouriteImages:
                 self.favouriteImages.remove(path)
+            if path in self.cachedSearchKeywords:
+                self.cachedSearchKeywords.remove(path)
 
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Missing Image!")
@@ -465,7 +490,7 @@ class PhotobashDocker(DockWidget):
 
         self.favouriteImages = []
         self.foundImages = []
-
+        self.cachedSearchKeywords = {}
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, "")
 
         if self.directoryPath == "":
