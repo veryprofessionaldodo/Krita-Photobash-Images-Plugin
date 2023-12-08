@@ -115,11 +115,11 @@ def customMouseMoveEvent(self, event):
 
     # only scale to document if it exists
     if self.fitCanvasChecked and not doc is None:
-        fullImage = QImage(self.path).scaled(doc.width() * scale, doc.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        fullImage = QImage(self.path).scaled(int(doc.width() * scale), int(doc.height() * scale), Qt.KeepAspectRatio, Qt.SmoothTransformation)
     else:
         fullImage = QImage(self.path)
         # scale image, now knowing the bounds
-        fullImage = fullImage.scaled(fullImage.width() * scale, fullImage.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        fullImage = fullImage.scaled(int(fullImage.width() * scale), int(fullImage.height() * scale), Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
     fullPixmap = QPixmap(50, 50).fromImage(fullImage)
     mimedata.setImageData(fullPixmap)
@@ -131,7 +131,7 @@ def customMouseMoveEvent(self, event):
     drag = QDrag(self)
     drag.setMimeData(mimedata)
     drag.setPixmap(self.pixmap)
-    drag.setHotSpot(QPoint(self.qimage.width() / 2, self.qimage.height() / 2))
+    drag.setHotSpot(QPoint(int(self.qimage.width() / 2), int(self.qimage.height() / 2)))
     drag.exec_(Qt.CopyAction)
 
 class Photobash_Display(QWidget):
