@@ -4,7 +4,9 @@ An advanced Krita Plugin, laser-focused on improving productivity for photo-bash
 Want to see this in action? Check out the [video](https://youtu.be/QX9jwhfpB_8)! Tested in Krita 4.4.8, 5.0 and 5.1.,5.2.1
 
 ## Changes
-- Supports search by extra caption file (must be the same name as the image)
+- Supports search by extra caption file (must be a text file with the same name as the image)
+- Supports adding image with transparency layer
+- Supports adding image grouped with an erase blending layer
 
 ## Installation
 
@@ -43,5 +45,7 @@ You can also have some extra features by right-clicking on an image. This will o
 - **Pin to Beginning / Unpin**: You can add "favourites" to an image, by pinning them to the beginning. This is useful if you have a select few images that you like to re-use, but are on different pages. This way you can have an easy way to access them, which will persist across restarts. It will only forget the favourite images if you decide to change the references folder. You can also unpin the images to send them to their original placement. A favourite will have a triangle in the top-left corner.
 - **Open as New Document**: Opens the image as a new document, but keep in mind that this is the original image. If you save it, it will override the one you have on your references folder. 
 - **Place as Reference**: You can add an image as reference, and place it wherever you want! If you want to remove a reference, you need to press the "Pushpin Icon" on your toolbox, and remove it using that tool.
+- ** Add with Transparency**: Add the image with a transparency mask. White is to keep the pixels and Black is to erase. The added mask is white filled but the default behavior is to remove pixels if moving the transparency layer.
+- ** Group with Erase Layer**: Adds an image in a group with an erase blending layer. Easier to move compared to **Add with Transparency** butcan't add any additional images to the group without having the erase layer affect all images in the group.
 
 #### Hope you enjoy this plugin, and feel free to post your artworks over on [Krita Artists](https://krita-artists.org/)!
