@@ -379,11 +379,28 @@ class PhotobashDocker(DockWidget):
         mimedata.setUrls([url])
         mimedata.setImageData(image)
 
-        # Set image in clipboard
-        QApplication.clipboard().setImage(image)
+        # get doc data
+        root = doc.rootNode()
+        active_node = doc.activeNode()
 
-        # Place Image and Refresh Canvas
-        Krita.instance().action('edit_paste').trigger()
+        # get base name
+        file_name = os.path.basename(photoPath)
+
+        # create layer with base name
+        new_layer = doc.createNode(file_name,'paintlayer')
+        root.addChildNode(new_layer,None)
+
+        # copy bytes from qImage into the image layer
+        ptr = image.bits()
+        ptr.setsize(image.byteCount())
+        new_layer.setPixelData(QByteArray(ptr.asstring()),0,0,image.width(),image.height())
+
+        # center the layer
+        center_x = int((doc.width() - image.width())/2)
+        center_y = int((doc.height() - image.height())/2)
+        new_layer.move(center_x,center_y)
+        
+       #Refresh Canvas
         Krita.instance().activeDocument().refreshProjection()
 
     def checkPath(self, path):
