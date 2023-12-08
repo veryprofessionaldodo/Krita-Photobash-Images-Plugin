@@ -430,7 +430,8 @@ class PhotobashDocker(DockWidget):
         Krita.instance().action('paste_as_reference').trigger()
 
     def openPreview(self, path):
-        self.imageWidget.setImage(path, self.getImage(path))
+        image = QImage(path)
+        self.imageWidget.setImage(path,image)
         self.layout.imageWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout.middleWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
 
