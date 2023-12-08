@@ -1,7 +1,10 @@
 # Krita Photobash Plugin
 
 An advanced Krita Plugin, laser-focused on improving productivity for photo-bashing and references!
-Want to see this in action? Check out the [video](https://youtu.be/QX9jwhfpB_8)! Tested in Krita 4.4.8, 5.0 and 5.1. 
+Want to see this in action? Check out the [video](https://youtu.be/QX9jwhfpB_8)! Tested in Krita 4.4.8, 5.0 and 5.1.,5.2.1
+
+## Changes
+- Supports search by extra caption file (must be the same name as the image)
 
 ## Installation
 
