@@ -289,7 +289,7 @@ class PhotobashDocker(DockWidget):
                 self.cachedSearchKeywords.pop(removedPath)
 
         self.cachedPathImages = [path] + self.cachedPathImages
-        self.cachedImages[path] = QImage(path).scaled(200, 200, Qt.KeepAspectRatio, Qt.FastTransformation)
+        self.cachedImages[path] = QImage(path).scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.cacheSearchTerms(os.path.basename(path))
         return self.cachedImages[path]
     
