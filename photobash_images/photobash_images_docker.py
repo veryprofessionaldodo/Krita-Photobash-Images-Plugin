@@ -17,6 +17,7 @@
 # program.  If not, see <http://www.gnu.org/licenses/>.
 
 from krita import *
+from enum import Enum
 import copy
 import math
 from PyQt5 import QtWidgets, QtCore, uic
@@ -26,7 +27,13 @@ from .photobash_images_modulo import (
 )
 import os.path
 
+class TransparencyType(Enum):
+    NONE = 0
+    LAYER = 1
+    BLEND = 2
+
 class PhotobashDocker(DockWidget):
+
     def __init__(self):
         super().__init__()
 
@@ -133,6 +140,8 @@ class PhotobashDocker(DockWidget):
             imageButton.SIGNAL_UN_FAVOURITE.connect(self.unpinFromFavourites)
             imageButton.SIGNAL_OPEN_NEW.connect(self.openNewDocument)
             imageButton.SIGNAL_REFERENCE.connect(self.placeReference)
+            imageButton.SIGNAL_ADD_WITH_TRANS_LAYER.connect(self.add_with_layer)
+            imageButton.SIGNAL_ADD_WITH_ERASE_GROUP.connect(self.add_with_blend)
             self.imagesButtons.append(imageButton)
 
     def setStyle(self):
@@ -346,7 +355,14 @@ class PhotobashDocker(DockWidget):
         self.layout.paginationSlider.setRange(0, maxNumPage - 1)
         self.layout.paginationSlider.setSliderPosition(self.currPage)
 
-    def addImageLayer(self, photoPath):
+
+    def add_with_layer(self,photoPath):
+        self.addImageLayer(photoPath,TransparencyType.LAYER)
+
+    def add_with_blend(self,photoPath):
+        self.addImageLayer(photoPath,TransparencyType.BLEND)
+
+    def addImageLayer(self, photoPath,transparency_type):
         # file no longer exists, remove from all structures
         if not self.checkPath(photoPath):
             self.updateImages()
@@ -388,7 +404,6 @@ class PhotobashDocker(DockWidget):
 
         # create layer with base name
         new_layer = doc.createNode(file_name,'paintlayer')
-        root.addChildNode(new_layer,None)
 
         # copy bytes from qImage into the image layer
         ptr = image.bits()
@@ -399,7 +414,35 @@ class PhotobashDocker(DockWidget):
         center_x = int((doc.width() - image.width())/2)
         center_y = int((doc.height() - image.height())/2)
         new_layer.move(center_x,center_y)
-        
+        if transparency_type == TransparencyType.NONE or transparency_type == TransparencyType.LAYER:
+            root.addChildNode(new_layer,None)
+        if transparency_type == TransparencyType.LAYER:
+            ## create a layer
+            transparency_layer = doc.createTransparencyMask('transparencymask')
+            
+            ## fill with white
+            trans_image = image.scaled(doc.width(),doc.height(), Qt.IgnoreAspectRatio, Qt.FastTransformation)
+            trans_image.fill(QColor('white'))
+
+            ## copy bytes over
+            trans_pointer = trans_image.bits()
+            trans_pointer.setsize(trans_image.byteCount())
+            transparency_layer.setPixelData(QByteArray(trans_pointer.asstring()),0,0,doc.width(),doc.height())
+
+            new_layer.addChildNode(transparency_layer,None)
+
+            ## move layer so centered image is not cropped.
+            transparency_layer.move(0,0)
+            
+        if transparency_type == transparency_type.BLEND:
+            new_group = doc.createGroupLayer(file_name)
+            root.addChildNode(new_group,None)
+            erase = doc.createNode('erase','paintLayer')
+            erase.setBlendingMode('erase')
+            new_group.addChildNode(new_layer,None)
+            new_group.addChildNode(erase,None)
+
+
        #Refresh Canvas
         Krita.instance().activeDocument().refreshProjection()
 
@@ -490,7 +533,7 @@ class PhotobashDocker(DockWidget):
 
     def buttonClick(self, position):
         if position < len(self.foundImages) - len(self.imagesButtons) * self.currPage:
-            self.addImageLayer(self.foundImages[position + len(self.imagesButtons) * self.currPage])
+            self.addImageLayer(self.foundImages[position + len(self.imagesButtons) * self.currPage],TransparencyType.NONE)
 
     def changePath(self):
         fileDialog = QFileDialog(QWidget(self))
