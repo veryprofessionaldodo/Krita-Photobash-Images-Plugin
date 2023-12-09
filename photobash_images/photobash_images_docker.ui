@@ -303,6 +303,24 @@
        <number>0</number>
       </property>
       <item>
+       <layout class="QHBoxLayout" name="sortByDateLayout">
+        <item>
+         <widget class="QCheckBox" name="dateSort">
+          <property name="text">
+           <string>Sort by Date</string>
+          </property>
+         </widget>
+        </item>
+        <item alignment="Qt::AlignRight">
+         <widget class="QToolButton" name="refresh">
+          <property name="text">
+           <string>Refresh</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="imageScaleLayout">
         <item>
          <widget class="QLabel" name="scaleSliderLabel">

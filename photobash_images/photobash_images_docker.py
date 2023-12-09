@@ -18,6 +18,7 @@
 
 from krita import *
 from enum import Enum
+from operator import itemgetter
 import copy
 import math
 from PyQt5 import QtWidgets, QtCore, uic
@@ -61,6 +62,8 @@ class PhotobashDocker(DockWidget):
         # maps path to image
         self.cachedImages = {}
         self.cachedSearchKeywords = {}
+        self.cachedDatePaths = []
+        self.order = []
         # store order of push
         self.cachedPathImages = []
         self.maxCachedImages = 90
@@ -114,10 +117,30 @@ class PhotobashDocker(DockWidget):
         # setup connections for bottom elements
         self.layout.previousButton.clicked.connect(lambda: self.updateCurrentPage(-1))
         self.layout.nextButton.clicked.connect(lambda: self.updateCurrentPage(1))
+        self.layout.refresh.clicked.connect(self.refresh_cache)
+        self.layout.dateSort.stateChanged.connect(self.sortByDate)
         self.layout.scaleSlider.valueChanged.connect(self.updateScale)
         self.layout.paginationSlider.setMinimum(0)
         self.layout.paginationSlider.valueChanged.connect(self.updatePage)
         self.layout.fitCanvasCheckBox.stateChanged.connect(self.changedFitCanvas)
+        self.sortImagesByDate = False
+
+    def refresh_cache(self):
+        self.favouriteImages = []
+        self.foundImages = []
+        self.cachedSearchKeywords = {}
+        self.getImagesFromDirectory()
+
+    def sortByDate(self,state):
+        if state == Qt.Checked:
+            self.sortImagesByDate = True
+            self.order = copy.deepcopy(self.foundImages)
+        else:
+            self.sortImagesByDate = False
+            self.foundImages = copy.deepcopy(self.order)
+        self.reorganizeImages()
+        self.updateImages()
+
 
     def setupModules(self):
         # Display Single
@@ -162,6 +185,7 @@ class PhotobashDocker(DockWidget):
         self.layout.scaleSliderLabel.setText(f"Image Scale : 100%")
 
         self.updateImages()
+        self.getImagesFromDirectory()
 
     def reorganizeImages(self):
         # organize images, taking into account favourites
@@ -171,8 +195,22 @@ class PhotobashDocker(DockWidget):
             if image in self.foundImages:
                 self.foundImages.remove(image)
                 favouriteFoundImages.append(image)
-
-        self.foundImages = favouriteFoundImages + self.foundImages
+        if not self.sortImagesByDate:
+            self.foundImages = favouriteFoundImages + self.foundImages
+        else:
+            cachedDates = self.cachedDatePaths[:]
+            for i in self.cachedDatePaths:
+                if i['value'] not in self.foundImages:
+                    cachedDates.remove(i)
+            favouriteDateImages = []
+            for favourite in self.favouriteImages:
+                for image in self.cachedDatePaths:
+                    if image['value'] == favourite:
+                        cachedDates.remove(image)
+                        favouriteDateImages.append(image)
+                        break
+            sorted_dates = sorted(favouriteDateImages,key=itemgetter('date'),reverse=True) + sorted(cachedDates,key=itemgetter('date'),reverse=True)
+            self.foundImages = [image['value'] for image in sorted_dates]
 
     def textFilterChanged(self):
         stringsInText = self.layout.filterTextEdit.text().lower().split(" ")
@@ -194,6 +232,7 @@ class PhotobashDocker(DockWidget):
                         newImages.append(path)
 
         self.foundImages = newImages
+        self.order = copy.deepcopy(self.foundImages)
         self.reorganizeImages()
         self.updateImages()
 
@@ -209,15 +248,18 @@ class PhotobashDocker(DockWidget):
 
         it = QDirIterator(self.directoryPath, QDirIterator.Subdirectories)
 
-
+        cache_date_paths = []
         while(it.hasNext()):
             if (".webp" in it.filePath() or ".png" in it.filePath() or ".jpg" in it.filePath() or ".jpeg" in it.filePath()) and \
                 (not ".webp~" in it.filePath() and not ".png~" in it.filePath() and not ".jpg~" in it.filePath() and not ".jpeg~" in it.filePath()):
                 self.cacheSearchTerms(it.filePath())
                 newImages.append(it.filePath())
-
+                cache_date_paths.append({
+                    'date':os.path.getmtime(it.filePath()),
+                    'value':it.filePath()
+                })
             it.next()
-
+        self.cachedDatePaths = sorted(cache_date_paths,key=itemgetter('date'),reverse=True)
         self.foundImages = copy.deepcopy(newImages)
         self.allImages = copy.deepcopy(newImages)
         self.reorganizeImages()
@@ -298,10 +340,12 @@ class PhotobashDocker(DockWidget):
             self.cachedImages.pop(removedPath)
             if removedPath in self.cachedSearchKeywords:
                 self.cachedSearchKeywords.pop(removedPath)
-
+            for i in self.cachedDatePaths[:]:
+                if i['value'] == removedPath:
+                    self.cachedDatePaths.remove(i)
+                    break
         self.cachedPathImages = [path] + self.cachedPathImages
         self.cachedImages[path] = QImage(path).scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.cacheSearchTerms(os.path.basename(path))
         return self.cachedImages[path]
     
     def splitPathName(self,path):
@@ -465,7 +509,10 @@ class PhotobashDocker(DockWidget):
                 self.favouriteImages.remove(path)
             if path in self.cachedSearchKeywords:
                 self.cachedSearchKeywords.remove(path)
-
+            for i in self.cachedDatePaths[:]:
+                if i['value'] == path:
+                    self.cachedDatePaths.remove(i)
+                    break
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Missing Image!")
             dlg.setText("This image you tried to open was not found. Removing from the list.")
@@ -561,6 +608,7 @@ class PhotobashDocker(DockWidget):
         self.favouriteImages = []
         self.foundImages = []
         self.cachedSearchKeywords = {}
+        self.cachedDatePaths = []
         Application.writeSetting(self.applicationName, self.foundFavouritesSetting, "")
 
         if self.directoryPath == "":
