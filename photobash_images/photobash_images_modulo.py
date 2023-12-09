@@ -115,11 +115,11 @@ def customMouseMoveEvent(self, event):
 
     # only scale to document if it exists
     if self.fitCanvasChecked and not doc is None:
-        fullImage = QImage(self.path).scaled(doc.width() * scale, doc.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        fullImage = QImage(self.path).scaled(int(doc.width() * scale), int(doc.height() * scale), Qt.KeepAspectRatio, Qt.SmoothTransformation)
     else:
         fullImage = QImage(self.path)
         # scale image, now knowing the bounds
-        fullImage = fullImage.scaled(fullImage.width() * scale, fullImage.height() * scale, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        fullImage = fullImage.scaled(int(fullImage.width() * scale), int(fullImage.height() * scale), Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
     fullPixmap = QPixmap(50, 50).fromImage(fullImage)
     mimedata.setImageData(fullPixmap)
@@ -131,7 +131,7 @@ def customMouseMoveEvent(self, event):
     drag = QDrag(self)
     drag.setMimeData(mimedata)
     drag.setPixmap(self.pixmap)
-    drag.setHotSpot(QPoint(self.qimage.width() / 2, self.qimage.height() / 2))
+    drag.setHotSpot(QPoint(int(self.qimage.width() / 2), int(self.qimage.height() / 2)))
     drag.exec_(Qt.CopyAction)
 
 class Photobash_Display(QWidget):
@@ -184,6 +184,11 @@ class Photobash_Button(QWidget):
     SIGNAL_OPEN_NEW = QtCore.pyqtSignal(str)
     SIGNAL_REFERENCE = QtCore.pyqtSignal(str)
     SIGNAL_DRAG = QtCore.pyqtSignal(int)
+    SIGNAL_ADD_WITH_TRANS_LAYER = QtCore.pyqtSignal(str)
+    SIGNAL_ADD_WITH_ERASE_GROUP = QtCore.pyqtSignal(str)
+    SIGNAL_MMD = QtCore.pyqtSignal(int)
+    SIGNAL_CTRL_LEFT = QtCore.pyqtSignal(int)
+
     PREVIOUS_DRAG_X = None
     fitCanvasChecked = False
     scale = 100
@@ -223,6 +228,10 @@ class Photobash_Button(QWidget):
     def mousePressEvent(self, event):
         if event.modifiers() == QtCore.Qt.NoModifier and event.buttons() == QtCore.Qt.LeftButton:
             self.SIGNAL_LMB.emit(self.number)
+        if event.modifiers() == QtCore.Qt.ControlModifier and event.buttons() == QtCore.Qt.LeftButton:
+            self.SIGNAL_CTRL_LEFT.emit(self.number)
+        if event.modifiers() == QtCore.Qt.NoModifier and event.buttons() == QtCore.Qt.MiddleButton:
+            self.SIGNAL_MMD.emit(self.number)
         if event.modifiers() == QtCore.Qt.AltModifier:
             self.PREVIOUS_DRAG_X = event.x()
 
@@ -249,7 +258,8 @@ class Photobash_Button(QWidget):
         cmenuFavourite = cmenu.addAction(favouriteString)
         cmenuOpenNew = cmenu.addAction("Open as New Document")
         cmenuReference = cmenu.addAction("Place as Reference")
-
+        cmenuTransparency = cmenu.addAction("Add with Transparency")
+        cmenuEraseGroup = cmenu.addAction("Group with Erase Layer")
         background = qApp.palette().color(QPalette.Window).name().split("#")[1]
         cmenuStyleSheet = f"""QMenu {{ background-color: #AA{background}; border: 1px solid #{background}; }}"""
         cmenu.setStyleSheet(cmenuStyleSheet)
@@ -266,6 +276,10 @@ class Photobash_Button(QWidget):
             self.SIGNAL_OPEN_NEW.emit(self.path)
         if action == cmenuReference:
             self.SIGNAL_REFERENCE.emit(self.path)
+        if action == cmenuTransparency:
+            self.SIGNAL_ADD_WITH_TRANS_LAYER.emit(self.path)
+        if action == cmenuEraseGroup:
+            self.SIGNAL_ADD_WITH_ERASE_GROUP.emit(self.path)
 
     def setImage(self, path, image):
         self.path = path
