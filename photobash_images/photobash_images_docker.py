@@ -602,7 +602,10 @@ class PhotobashDocker(DockWidget):
         
         title = "Change Directory for Images"
         dialogOptions = QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
-        self.directoryPath = fileDialog.getExistingDirectory(self.mainWidget, title, path, dialogOptions)
+        new_path = fileDialog.getExistingDirectory(self.mainWidget, title, path, dialogOptions)
+        if self.directoryPath != "" and new_path == "":
+            return
+        self.directoryPath = new_path
         Application.writeSetting(self.applicationName, self.referencesSetting, self.directoryPath)
 
         self.favouriteImages = []
