@@ -142,6 +142,8 @@ class PhotobashDocker(DockWidget):
             imageButton.SIGNAL_REFERENCE.connect(self.placeReference)
             imageButton.SIGNAL_ADD_WITH_TRANS_LAYER.connect(self.add_with_layer)
             imageButton.SIGNAL_ADD_WITH_ERASE_GROUP.connect(self.add_with_blend)
+            imageButton.SIGNAL_MMD.connect(self.add_image_with_layer)
+            imageButton.SIGNAL_CTRL_LEFT.connect(self.add_image_with_group)
             self.imagesButtons.append(imageButton)
 
     def setStyle(self):
@@ -356,6 +358,13 @@ class PhotobashDocker(DockWidget):
         self.layout.paginationSlider.setSliderPosition(self.currPage)
 
 
+    def add_image_with_layer(self,position):
+        if position < len(self.foundImages) - len(self.imagesButtons) * self.currPage:
+            self.addImageLayer(self.foundImages[position + len(self.imagesButtons) * self.currPage],TransparencyType.LAYER)
+
+    def add_image_with_group(self,position):
+        if position < len(self.foundImages) - len(self.imagesButtons) * self.currPage:
+            self.addImageLayer(self.foundImages[position + len(self.imagesButtons) * self.currPage],TransparencyType.BLEND)
     def add_with_layer(self,photoPath):
         self.addImageLayer(photoPath,TransparencyType.LAYER)
 

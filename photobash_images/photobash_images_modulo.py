@@ -186,6 +186,8 @@ class Photobash_Button(QWidget):
     SIGNAL_DRAG = QtCore.pyqtSignal(int)
     SIGNAL_ADD_WITH_TRANS_LAYER = QtCore.pyqtSignal(str)
     SIGNAL_ADD_WITH_ERASE_GROUP = QtCore.pyqtSignal(str)
+    SIGNAL_MMD = QtCore.pyqtSignal(int)
+    SIGNAL_CTRL_LEFT = QtCore.pyqtSignal(int)
 
     PREVIOUS_DRAG_X = None
     fitCanvasChecked = False
@@ -226,6 +228,10 @@ class Photobash_Button(QWidget):
     def mousePressEvent(self, event):
         if event.modifiers() == QtCore.Qt.NoModifier and event.buttons() == QtCore.Qt.LeftButton:
             self.SIGNAL_LMB.emit(self.number)
+        if event.modifiers() == QtCore.Qt.ControlModifier and event.buttons() == QtCore.Qt.LeftButton:
+            self.SIGNAL_CTRL_LEFT.emit(self.number)
+        if event.modifiers() == QtCore.Qt.NoModifier and event.buttons() == QtCore.Qt.MiddleButton:
+            self.SIGNAL_MMD.emit(self.number)
         if event.modifiers() == QtCore.Qt.AltModifier:
             self.PREVIOUS_DRAG_X = event.x()
 
