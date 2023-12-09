@@ -27,7 +27,9 @@ After setting the references folder, you now have a list of 9 images in the dock
 - Clicking on the "next" and "previous" buttons on the bottom row of the docker;
 - Scrolling the slider next to the pages indicator;
 - Mouse Wheel Up and Down;
-- Alt + Drag Left or Right, in case you're using a stylus. 
+- Alt + Drag Left or Right, in case you're using a stylus.
+- Clicking with Middle Mouse Button on an image adds the image with a transparency mask
+- Ctrl + Left Click creates a group with the image + a layer with blending mode set to erase
 
 If the images in the folders are of large size, there may be some slowdown when scrolling quickly. However, the plugin is caching the previews, and stores up to 90 images, so you can scroll through them back more easily later. 
 
