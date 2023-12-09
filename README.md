@@ -7,6 +7,8 @@ Want to see this in action? Check out the [video](https://youtu.be/QX9jwhfpB_8)!
 - Supports search by extra caption file (must be a text file with the same name as the image)
 - Supports adding image with transparency layer
 - Supports adding image grouped with an erase blending layer
+- Supports reloading images in directory without needing to reset to a different directory
+- Supports sorting by date (in descending order)
 
 ## Installation
 
